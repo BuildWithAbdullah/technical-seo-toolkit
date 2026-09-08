@@ -1,0 +1,22 @@
+{
+  "_comment": "robots.txt together with the indexing directives of the pages it governs. The central fault is only visible when both are in view, which is why it survives audits that look at one file at a time.",
+  "robotsTxt": "User-agent: *\nDisallow: /account/\nDisallow: /search\nDisallow: /assets/\nDisallow: /sitemap.xml\n\nSitemap: https://www.northwind.example/sitemap.xml\n",
+  "pages": [
+    {
+      "_comment": "Disallowed and noindexed at the same time. The crawler is forbidden from fetching the page, so it never reads the noindex. Google keeps the URL, shows it with no description, and there is no way to remove it while it stays blocked.",
+      "url": "https://www.northwind.example/account/orders",
+      "robots": "noindex, nofollow"
+    },
+    {
+      "_comment": "Disallowed and submitted in the sitemap. Two instructions that contradict each other, both authored here.",
+      "url": "https://www.northwind.example/search",
+      "inSitemap": true
+    },
+    {
+      "_comment": "Disallowed, and carrying a canonical that Google will never read, so the duplicate is never consolidated.",
+      "url": "https://www.northwind.example/search?q=rye",
+      "canonicalTarget": "https://www.northwind.example/baking/starters"
+    }
+  ],
+  "renderAssets": ["/assets/app.css", "/assets/app.js"]
+}

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Northwind Supply</title>
+
+  <!-- 1. A Universal Analytics property. Google stopped processing these in
+          July 2023, so this tag has reported into nothing for years. It
+          usually survives because it lives in a platform settings field
+          rather than in the theme, and nobody thinks to look there. -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-11111111-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'UA-11111111-1');
+
+    /* 2. Two different GA4 properties on one page: one added by the theme,
+          one by a plugin. Both count the same visit. */
+    gtag('config', 'G-AAAAAAAAAA');
+    gtag('config', 'G-BBBBBBBBBB');
+
+    /* 3. And the first one configured twice, which double counts sessions in
+          the property that people actually read. */
+    gtag('config', 'G-AAAAAAAAAA');
+  </script>
+
+  <!-- 4. Two tag containers. The second belongs to a previous agency and
+          cannot be opened, edited or switched off from this account. The site
+          owner's measurement depends on somebody else's infrastructure. -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];})(window,document,'script','dataLayer','GTM-AAAAAAA');</script>
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];})(window,document,'script','dataLayer','GTM-ZZZZZZZ');</script>
+</head>
+<body><h1>Northwind Supply</h1></body>
+</html>

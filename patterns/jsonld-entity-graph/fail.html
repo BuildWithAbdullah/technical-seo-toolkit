@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Rye sourdough starter | Northwind Supply</title>
+
+  <!-- Three faults, all of which validate:
+
+       1. The Organization has no @id. Nothing can point at it, so every page
+          that wants to mention the organisation describes it again from
+          scratch, and each description is a separate claim about who this
+          business is.
+
+       2. publisher inlines the whole organisation a second time, with a
+          different legal name and a different host. Three templates carrying
+          three copies drift apart within a year, and none of them is the one
+          to trust.
+
+       3. isPartOf references a WebSite node that is not in this graph. It
+          resolves to nothing, and no validator will say so, because a
+          reference to an @id that happens to be defined on some other page is
+          perfectly legal markup. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "name": "Northwind Supply",
+        "url": "https://www.northwind.example"
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://www.northwind.example/products/rye-starter#webpage",
+        "url": "https://www.northwind.example/products/rye-starter",
+        "name": "Rye sourdough starter",
+        "publisher": {
+          "@type": "Organization",
+          "name": "Northwind Supply Ltd",
+          "url": "https://northwind.example",
+          "logo": "https://www.northwind.example/brand/logo.png"
+        },
+        "isPartOf": { "@id": "https://www.northwind.example/#website" }
+      }
+    ]
+  }
+  </script>
+</head>
+<body><h1>Rye sourdough starter</h1></body>
+</html>

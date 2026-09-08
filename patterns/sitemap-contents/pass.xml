@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Canonical https URLs, one entry each, and a lastmod that is a real W3C
+  datetime taken from when the content actually changed.
+
+  lastmod is the only per-URL hint in this file Google acts on, and it acts on
+  it only while it stays honest. A build pipeline that stamps today's date on
+  every page at every deploy teaches Google to ignore the field, and there is
+  no way to earn that trust back on a schedule you control. Take the value from
+  the content's own updated_at, and leave it alone when nothing changed.
+
+  Nothing in this file redirects, is noindexed, or is blocked in robots.txt. A
+  sitemap is a list of pages you are putting forward as canonical, so an entry
+  that contradicts one of your other signals is a contradiction you submitted
+  in writing.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.northwind.example/</loc>
+    <lastmod>2026-08-14T09:12:00+01:00</lastmod>
+  </url>
+  <url>
+    <loc>https://www.northwind.example/baking</loc>
+    <lastmod>2026-07-30</lastmod>
+  </url>
+  <url>
+    <loc>https://www.northwind.example/baking/starters</loc>
+    <lastmod>2026-09-01</lastmod>
+  </url>
+  <url>
+    <loc>https://www.northwind.example/baking/starters/rye-starter</loc>
+    <lastmod>2026-09-03</lastmod>
+  </url>
+</urlset>

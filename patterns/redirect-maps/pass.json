@@ -1,0 +1,18 @@
+{
+  "_comment": "The same three site changes, flattened. Every historical URL points straight at the URL that serves the content today, in one 301 hop.",
+  "permanent": true,
+  "redirects": [
+    {
+      "_comment": "Both historical product URLs point at the destination directly. When a destination moves again, every rule that pointed at it is rewritten to the new target rather than a new rule being appended. That rewrite is the whole discipline; a map only grows chains when the easy option is taken instead.",
+      "from": "/products/rye-starter-500g", "to": "/baking/starters/rye-starter", "status": 301
+    },
+    { "from": "/shop/rye-starter", "to": "/baking/starters/rye-starter", "status": 301 },
+
+    {
+      "_comment": "One direction only. The reverse rule was deleted rather than left in place, because a loop is two correct rules in the same file.",
+      "from": "/shop/wheat-starter", "to": "/baking/starters/wheat-starter", "status": 301
+    },
+
+    { "from": "/old-blog", "to": "/journal", "status": 301 }
+  ]
+}

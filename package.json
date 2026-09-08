@@ -1,0 +1,14 @@
+{
+  "name": "technical-seo-toolkit",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Crawlability, indexation, structured data and measurement patterns, each with a failing and a corrected example checked by machine.",
+  "type": "module",
+  "scripts": {
+    "verify": "node tools/verify.mjs"
+  },
+  "devDependencies": {
+    "cheerio": "^1.0.0",
+    "fast-xml-parser": "^5.11.1"
+  }
+}

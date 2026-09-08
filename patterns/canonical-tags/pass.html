@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Rye sourdough starter | Northwind Supply</title>
+
+  <!-- One canonical, in the head, absolute, https, no campaign parameters,
+       and identical to og:url. Self-referencing, because a page that does not
+       claim itself invites Google to choose a claimant for it.
+
+       Build it from one base URL held in configuration, not by hand:
+
+         const base = process.env.SITE_URL;   // https://www.northwind.example
+         const canonical = new URL(path, base).toString();
+
+       That single line is what stops staging emitting production canonicals,
+       which is the version of this fault that removes a site from the index
+       rather than merely confusing it. -->
+  <link rel="canonical" href="https://www.northwind.example/products/rye-starter">
+  <meta property="og:url" content="https://www.northwind.example/products/rye-starter">
+</head>
+<body>
+  <h1>Rye sourdough starter</h1>
+</body>
+</html>

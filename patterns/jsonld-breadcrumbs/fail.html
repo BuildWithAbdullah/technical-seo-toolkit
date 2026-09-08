@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Rye sourdough starter | Northwind Supply</title>
+  <meta property="og:url" content="https://www.northwind.example/baking/starters/rye-starter">
+
+  <!-- Four faults:
+
+       1. Positions start at 0. The vocabulary is one-based, so this trail
+          claims to begin somewhere before the beginning.
+
+       2. The second item uses a relative URL. Structured data has no base to
+          resolve one against.
+
+       3. The trail stops at the category, so it says this page is the category
+          page.
+
+       4. Which is also why the depth is wrong: a three-segment path needs four
+          items, counting the home page, and this has three. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 0, "name": "Home",
+        "item": "https://www.northwind.example/" },
+      { "@type": "ListItem", "position": 1, "name": "Baking",
+        "item": "/baking" },
+      { "@type": "ListItem", "position": 2, "name": "Starters",
+        "item": "https://www.northwind.example/baking/starters" }
+    ]
+  }
+  </script>
+</head>
+<body><h1>Rye sourdough starter</h1></body>
+</html>

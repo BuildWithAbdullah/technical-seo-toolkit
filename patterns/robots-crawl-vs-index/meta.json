@@ -1,0 +1,9 @@
+{
+  "slug": "robots-crawl-vs-index",
+  "name": "Crawling and indexing are different controls",
+  "kind": "robots",
+  "expect": ["robots-disallow-hides-noindex", "robots-disallow-contradicts-sitemap", "robots-blocks-render-assets", "robots-blocks-own-sitemap", "robots-disallow-hides-canonical"],
+  "gscReports": true,
+  "gscNote": "Page indexing shows Indexed, though blocked by robots.txt, which is Google telling you exactly this and is routinely read as a warning rather than as the answer.",
+  "manualCheck": "For every URL you want out of the index, confirm the crawler can still fetch it. Use the URL Inspection tool: it must report the page as crawlable and show the noindex it found. If it reports the page as blocked, the noindex is not doing anything."
+}

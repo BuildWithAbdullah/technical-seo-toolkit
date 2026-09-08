@@ -1,0 +1,32 @@
+{
+  "_comment": "Every page lists every page including itself, with absolute URLs and valid language or language-region codes. x-default names the page served to everyone the cluster does not cover.",
+  "pages": [
+    {
+      "url": "https://www.northwind.example/products/rye-starter",
+      "alternates": [
+        { "hreflang": "en", "href": "https://www.northwind.example/products/rye-starter" },
+        { "hreflang": "de", "href": "https://www.northwind.example/de/produkte/roggen-starter" },
+        { "hreflang": "fr", "href": "https://www.northwind.example/fr/produits/levain-seigle" },
+        { "hreflang": "x-default", "href": "https://www.northwind.example/products/rye-starter" }
+      ]
+    },
+    {
+      "url": "https://www.northwind.example/de/produkte/roggen-starter",
+      "alternates": [
+        { "hreflang": "en", "href": "https://www.northwind.example/products/rye-starter" },
+        { "hreflang": "de", "href": "https://www.northwind.example/de/produkte/roggen-starter" },
+        { "hreflang": "fr", "href": "https://www.northwind.example/fr/produits/levain-seigle" },
+        { "hreflang": "x-default", "href": "https://www.northwind.example/products/rye-starter" }
+      ]
+    },
+    {
+      "url": "https://www.northwind.example/fr/produits/levain-seigle",
+      "alternates": [
+        { "hreflang": "en", "href": "https://www.northwind.example/products/rye-starter" },
+        { "hreflang": "de", "href": "https://www.northwind.example/de/produkte/roggen-starter" },
+        { "hreflang": "fr", "href": "https://www.northwind.example/fr/produits/levain-seigle" },
+        { "hreflang": "x-default", "href": "https://www.northwind.example/products/rye-starter" }
+      ]
+    }
+  ]
+}

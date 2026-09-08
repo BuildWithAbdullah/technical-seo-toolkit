@@ -1,0 +1,9 @@
+{
+  "slug": "jsonld-parses",
+  "name": "Structured data that survives the parser",
+  "kind": "jsonld-syntax",
+  "expect": ["jsonld-unparseable", "jsonld-duplicate-entity", "jsonld-html-escaped", "jsonld-empty-block"],
+  "gscReports": false,
+  "gscNote": "Enhancement reports only list types Google managed to parse. A block it could not read produces no row, no warning and no error; it is simply absent.",
+  "manualCheck": "Run the live URL through the Rich Results Test and the Schema Markup Validator. Testing the source you pasted in proves nothing, because the failure is usually introduced by the CMS between your editor and the page."
+}

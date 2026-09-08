@@ -1,0 +1,9 @@
+{
+  "slug": "jsonld-breadcrumbs",
+  "name": "Breadcrumbs that match the URL they are on",
+  "kind": "jsonld-breadcrumb",
+  "expect": ["breadcrumb-position-not-sequential", "breadcrumb-relative-url", "breadcrumb-last-item-not-this-page", "breadcrumb-depth-mismatch"],
+  "gscReports": true,
+  "gscNote": "The Breadcrumbs enhancement report catches missing fields, but not a trail that is internally valid and describes a different page.",
+  "manualCheck": "Compare the trail against the visible breadcrumbs and against the URL path. All three should tell the same story; markup that disagrees with the page is the version Google stops trusting."
+}

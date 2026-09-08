@@ -1,0 +1,22 @@
+{
+  "_comment": "Crawling is controlled in robots.txt, indexing is controlled on the page, and the two are not used to do each other's job.",
+  "robotsTxt": "User-agent: *\nDisallow: /search\nAllow: /assets/\n\nSitemap: https://www.northwind.example/sitemap.xml\n",
+  "pages": [
+    {
+      "_comment": "Crawlable, so the noindex is read and honoured. The page leaves the index and stays out. Removing the Disallow is what makes the noindex work, which reads backwards until you follow the order of operations: fetch, then parse, then obey.",
+      "url": "https://www.northwind.example/account/orders",
+      "robots": "noindex, follow"
+    },
+    {
+      "_comment": "Genuinely infinite space, so crawling is blocked to protect crawl budget, and it is not in the sitemap and carries no canonical, because neither would ever be read.",
+      "url": "https://www.northwind.example/search?q=rye"
+    },
+    {
+      "_comment": "Crawlable, indexable, canonical, and in the sitemap. Every signal agrees.",
+      "url": "https://www.northwind.example/baking/starters",
+      "robots": "index, follow",
+      "inSitemap": true
+    }
+  ],
+  "renderAssets": ["/assets/app.css", "/assets/app.js"]
+}

@@ -1,0 +1,9 @@
+{
+  "slug": "hreflang-clusters",
+  "name": "hreflang clusters that are reciprocal and self-referencing",
+  "kind": "hreflang",
+  "expect": ["hreflang-missing-self", "hreflang-not-reciprocal", "hreflang-invalid-code", "hreflang-relative"],
+  "gscReports": false,
+  "gscNote": "The International Targeting report was retired. Nothing in Search Console tells you a cluster is one-directional; the symptom is the wrong country's page ranking.",
+  "manualCheck": "Take one URL from each language, fetch all of them, and confirm every page lists every other page and itself. A cluster is only valid if the whole set agrees."
+}

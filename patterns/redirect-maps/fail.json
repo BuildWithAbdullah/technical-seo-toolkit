@@ -1,0 +1,32 @@
+{
+  "_comment": "A map that accumulated over three site changes. Each rule was correct when it was added, which is how every map ends up like this.",
+  "permanent": true,
+  "redirects": [
+    {
+      "_comment": "1. A chain. The 2019 URL points at the 2022 URL, which points at the current one. Every hop costs a round trip for users and dilutes what is passed on.",
+      "from": "/products/rye-starter-500g", "to": "/shop/rye-starter", "status": 301
+    },
+    { "from": "/shop/rye-starter", "to": "/baking/starters/rye-starter", "status": 301 },
+
+    {
+      "_comment": "2. A loop, created when someone reversed a rule without removing its opposite. Browsers give up and users see an error page.",
+      "from": "/baking/wheat-starter", "to": "/shop/wheat-starter", "status": 301
+    },
+    { "from": "/shop/wheat-starter", "to": "/baking/wheat-starter", "status": 301 },
+
+    {
+      "_comment": "3. A 302 on a permanent move. It was meant to be temporary during a launch two years ago.",
+      "from": "/old-blog", "to": "/journal", "status": 302
+    },
+
+    {
+      "_comment": "4. A rule that points at itself, which the server will either reject or serve until it gives up.",
+      "from": "/contact", "to": "/contact", "status": 301
+    },
+
+    {
+      "_comment": "5. The same source mapped twice, in two files merged by different people. Which one wins depends on load order.",
+      "from": "/old-blog", "to": "/blog", "status": 301
+    }
+  ]
+}

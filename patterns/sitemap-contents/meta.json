@@ -1,0 +1,9 @@
+{
+  "slug": "sitemap-contents",
+  "name": "A sitemap that says something Google uses",
+  "kind": "sitemap",
+  "expect": ["sitemap-priority-or-changefreq", "sitemap-lastmod-missing", "sitemap-loc-non-https", "sitemap-duplicate-loc", "sitemap-lastmod-invalid"],
+  "gscReports": true,
+  "gscNote": "The Sitemaps report gives a read count and parse errors. It does not tell you that lastmod is being ignored because it is not a W3C datetime, or that half the file is redirects.",
+  "manualCheck": "Take twenty URLs from the file at random and fetch them. Every one should return 200, be self-canonical, and be indexable. A sitemap is a list of pages you are asking Google to treat as canonical, so anything that redirects or is excluded does not belong in it."
+}

@@ -1,0 +1,9 @@
+{
+  "slug": "jsonld-entity-graph",
+  "name": "One entity, referenced, not repeated",
+  "kind": "jsonld-graph",
+  "expect": ["jsonld-entity-without-id", "jsonld-inlined-entity", "jsonld-dangling-reference"],
+  "gscReports": false,
+  "gscNote": "Google reports whether an item is eligible for a rich result, not whether your entities are coherent. A site can pass every enhancement report and still describe four different organisations.",
+  "manualCheck": "Crawl the site and collect every JSON-LD node. The Organization should appear once, with one @id, and every other page should reference that @id rather than restating it."
+}

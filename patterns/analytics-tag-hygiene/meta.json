@@ -1,0 +1,9 @@
+{
+  "slug": "analytics-tag-hygiene",
+  "name": "One measurement tag per page view",
+  "kind": "analytics",
+  "expect": ["analytics-legacy-ua", "analytics-multiple-ga4-properties", "analytics-multiple-gtm-containers", "analytics-duplicate-config"],
+  "gscReports": false,
+  "gscNote": "Search Console reports nothing about analytics. The tell is Search Console impressions that cannot account for the sessions your analytics claims.",
+  "manualCheck": "Load a page with Tag Assistant and count the tags that fire on one view. Then open the container itself and confirm the account it belongs to is one you can log into. A tag you cannot see the container for is measurement you do not own."
+}

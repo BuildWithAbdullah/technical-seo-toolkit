@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Rye sourdough starter | Northwind Supply</title>
+
+  <!-- Every entity is declared once, with a stable @id built from the site URL
+       and a fragment. Everything else points at that @id.
+
+       The @id is an identifier, not a link. It does not have to resolve to a
+       page; it has to be the same string everywhere, forever. Deriving it from
+       one configured base URL is what makes that true across templates:
+
+         const org = `${base}/#organization`;
+
+       The payoff is that the organisation is described in exactly one place.
+       Change the logo once and every page that references it is correct,
+       because none of them held a copy. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.northwind.example/#organization",
+        "name": "Northwind Supply",
+        "url": "https://www.northwind.example",
+        "logo": "https://www.northwind.example/brand/logo.png",
+        "sameAs": [
+          "https://www.linkedin.com/company/northwind-supply-example",
+          "https://www.instagram.com/northwindsupplyexample"
+        ]
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.northwind.example/#website",
+        "url": "https://www.northwind.example",
+        "name": "Northwind Supply",
+        "publisher": { "@id": "https://www.northwind.example/#organization" }
+      },
+      {
+        "@type": "WebPage",
+        "@id": "https://www.northwind.example/products/rye-starter#webpage",
+        "url": "https://www.northwind.example/products/rye-starter",
+        "name": "Rye sourdough starter",
+        "isPartOf": { "@id": "https://www.northwind.example/#website" },
+        "publisher": { "@id": "https://www.northwind.example/#organization" }
+      }
+    ]
+  }
+  </script>
+</head>
+<body><h1>Rye sourdough starter</h1></body>
+</html>

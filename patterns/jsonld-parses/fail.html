@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Northwind Supply</title>
+
+  <!-- 1. Truncated. A CMS field with a length limit cut it partway through a
+          URL. It is not valid JSON, so the entire block is discarded. Nothing
+          in it reaches Google, including the parts before the cut. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Northwind Supply",
+    "url": "https://www.northwind.exam
+  </script>
+
+  <!-- 2. The same entity pasted a second time by whoever noticed the first was
+          broken and added a new one rather than fixing it. Two Organization
+          nodes with no identifier is two claims about who the business is. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Northwind Supply",
+    "url": "https://www.northwind.example"
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Northwind Supply",
+    "url": "https://www.northwind.example"
+  }
+  </script>
+
+  <!-- 3. HTML-escaped on the way in, because it was pasted into a rich text
+          field rather than a code block. It renders as text and parses as
+          nothing. -->
+  <script type="application/ld+json">
+  {&quot;@context&quot;:&quot;https://schema.org&quot;,&quot;@type&quot;:&quot;WebSite&quot;}
+  </script>
+
+  <!-- 4. An empty block left by a plugin that had nothing to emit. -->
+  <script type="application/ld+json"></script>
+</head>
+<body><h1>Northwind Supply</h1></body>
+</html>

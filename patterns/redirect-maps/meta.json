@@ -1,0 +1,9 @@
+{
+  "slug": "redirect-maps",
+  "name": "A migration map with no chains and no loops",
+  "kind": "redirects",
+  "expect": ["redirect-chain", "redirect-loop", "redirect-temporary-for-permanent-move", "redirect-to-self", "redirect-duplicate-source"],
+  "gscReports": false,
+  "gscNote": "Page indexing reports Page with redirect as a neutral status. It does not distinguish one clean hop from a four-hop chain, and it says nothing at all about a loop until the pages start dropping out.",
+  "manualCheck": "Run every source URL through curl and count the hops to a 200. Do it after deployment, not against the map, because the server, the CDN and the platform each add rules of their own that the map does not know about."
+}

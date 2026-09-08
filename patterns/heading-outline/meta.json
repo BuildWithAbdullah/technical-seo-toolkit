@@ -1,0 +1,9 @@
+{
+  "slug": "heading-outline",
+  "name": "A heading outline that describes the page",
+  "kind": "headings",
+  "expect": ["heading-no-h1", "heading-skipped-level", "heading-empty", "heading-used-for-styling"],
+  "gscReports": false,
+  "gscNote": "No report covers heading structure. It surfaces indirectly, as pages that rank for nothing specific because nothing on them states what they are.",
+  "manualCheck": "Read the headings alone, in order, with the rest of the page hidden. If that list does not read as a table of contents for the page, the outline is wrong regardless of what any tool says."
+}

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Rye sourdough starter | Northwind Supply</title>
+
+  <!-- 1. Relative. The specification requires an absolute URL, and a relative
+          one resolves against whatever host served the page, which on a
+          staging domain means staging canonicalises to itself. -->
+  <link rel="canonical" href="/products/rye-starter">
+
+  <!-- 2. A second canonical, added by a plugin that does not check whether the
+          theme already emitted one. Two conflicting values are discarded and
+          Google picks its own. -->
+  <link rel="canonical" href="https://northwind.example/products/rye-starter?utm_source=newsletter">
+
+  <!-- 3. og:url disagrees with both. Every consumer that trusts og:url now has
+          a different idea of the page's identity. -->
+  <meta property="og:url" content="https://www.northwind.example/products/rye-starter">
+</head>
+<body>
+  <h1>Rye sourdough starter</h1>
+  <!-- 4. A third one in the body, where it is ignored outright. -->
+  <link rel="canonical" href="https://northwind.example/products/rye-starter">
+</body>
+</html>

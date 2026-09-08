@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Northwind Supply</title>
+
+  <!-- One block, valid JSON, each entity declared once.
+
+       Serialise it with JSON.stringify from real data rather than keeping a
+       string template in a CMS field. A template invites the two failures
+       above: a length limit truncates it, and a rich text editor escapes it.
+       Neither can happen to a structure that is built and stringified at
+       render time.
+
+       Then test the live URL, not the source. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://www.northwind.example/#organization",
+        "name": "Northwind Supply",
+        "url": "https://www.northwind.example",
+        "logo": "https://www.northwind.example/brand/logo.png"
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://www.northwind.example/#website",
+        "url": "https://www.northwind.example",
+        "name": "Northwind Supply",
+        "publisher": { "@id": "https://www.northwind.example/#organization" }
+      }
+    ]
+  }
+  </script>
+</head>
+<body><h1>Northwind Supply</h1></body>
+</html>

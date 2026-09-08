@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  1. priority and changefreq on every entry. Google has said for years that it
+     ignores both. They are the two elements most generators fill in and most
+     arguments are about.
+  2. lastmod missing entirely on most entries, and written with a space instead
+     of a T on the one that has it. That is not a W3C datetime, so it is
+     discarded, and the field that was the only useful one in the file goes
+     unread.
+  3. An http URL, which costs a redirect on every crawl.
+  4. The directory form and the index file both listed. Those are two URLs to a
+     crawler, and one of them will be judged a duplicate of the other.
+  5. The same URL listed twice, which is what happens when two generators are
+     merged and nobody deduplicates.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://www.northwind.example/</loc>
+    <priority>1.0</priority>
+    <changefreq>daily</changefreq>
+  </url>
+  <url>
+    <loc>https://www.northwind.example/index.html</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>http://www.northwind.example/baking</loc>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.northwind.example/baking/starters</loc>
+    <lastmod>2026-09-01 14:32:00</lastmod>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.northwind.example/baking/starters</loc>
+    <priority>0.6</priority>
+  </url>
+</urlset>

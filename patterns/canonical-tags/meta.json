@@ -1,0 +1,9 @@
+{
+  "slug": "canonical-tags",
+  "name": "Canonical tags that name a real, reachable URL",
+  "kind": "canonical",
+  "expect": ["canonical-relative", "canonical-og-url-mismatch", "canonical-multiple", "canonical-outside-head", "canonical-tracking-params"],
+  "gscReports": true,
+  "gscNote": "Page indexing shows Alternate page with proper canonical tag and Duplicate, Google chose a different canonical, but only after the damage.",
+  "manualCheck": "Fetch the page as Googlebot and read the canonical out of the rendered HTML, not the source. A client-side router that rewrites it after hydration is a different tag from the one the crawler sees first."
+}

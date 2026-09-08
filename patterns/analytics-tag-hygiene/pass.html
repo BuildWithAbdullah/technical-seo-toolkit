@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Northwind Supply</title>
+
+  <!-- One container, in an account the site owner can log into, loading one
+       GA4 property. Everything else is configured inside the container rather
+       than pasted into the page, so there is one place to look when the
+       numbers stop making sense.
+
+       The dead Universal Analytics id was removed from the platform's own
+       analytics settings field, not just from the theme. That field is where
+       it usually survives a cleanup. -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});
+    var f=d.getElementsByTagName(s)[0],j=d.createElement(s);j.async=true;
+    j.src='https://www.googletagmanager.com/gtm.js?id='+i;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-AAAAAAA');</script>
+</head>
+<body>
+  <h1>Northwind Supply</h1>
+
+  <!-- Intent is pushed to the data layer from the page and turned into an
+       event inside the container. It is recorded here rather than on the form
+       itself because the enquiry form is embedded from another company's
+       domain, and the browser's same-origin rules mean no analytics tool on
+       this site can see a submission inside it. The click that leads to the
+       form is the closest honest signal, and calling it intent rather than a
+       conversion keeps the report truthful. -->
+  <a href="/contact" data-cta="contact">Get in touch</a>
+  <script>
+    document.querySelectorAll('[data-cta="contact"]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        window.dataLayer.push({ event: 'contact_intent', cta: el.dataset.cta });
+      });
+    });
+  </script>
+</body>
+</html>
