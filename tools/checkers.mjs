@@ -22,6 +22,27 @@ const trimSlash = (url) => String(url).replace(/\/$/, '');
 // W3C Datetime, which is what the sitemap protocol requires for lastmod.
 const W3C_DATE = /^\d{4}(-\d{2}(-\d{2}(T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:\d{2}))?)?)?$/;
 
+// Shape is necessary and not sufficient. The pattern above accepts 2026-02-30
+// and 2026-13-01, and the fault this pattern is about is a lastmod Google
+// cannot parse and therefore ignores, so the components are checked against
+// the date they actually produce rather than against their own spelling.
+const isW3CDatetime = (value) => {
+  if (!W3C_DATE.test(value)) return false;
+  const [year, month, day] = String(value).split(/[-T]/);
+  if (month !== undefined && (Number(month) < 1 || Number(month) > 12)) return false;
+  if (day !== undefined) {
+    const utc = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+    if (utc.getUTCMonth() !== Number(month) - 1 || utc.getUTCDate() !== Number(day)) return false;
+  }
+  return true;
+};
+
+// Language, then an optional script subtag, then an optional region. Script
+// subtags are valid and in use: zh-Hant and zh-Hant-TW are correct values, and
+// an earlier version of this pattern rejected them, so a correctly built
+// Chinese cluster was reported as broken.
+const HREFLANG_VALUE = /^[a-z]{2,3}(-[A-Z][a-z]{3})?(-[A-Z]{2})?$/;
+
 const load = (html) => cheerio.load(html);
 
 const pageUrlOf = ($) =>
@@ -99,10 +120,11 @@ function hreflang(body) {
       if (!isAbsolute(alt.href)) {
         out.push(p('hreflang-relative', `${page.url} declares a relative alternate "${alt.href}"`));
       }
-      if (alt.hreflang !== 'x-default' && !/^[a-z]{2,3}(-[A-Z]{2})?$/.test(alt.hreflang)) {
-        const reason = /^[A-Za-z]{2}$/.test(alt.hreflang)
+      if (alt.hreflang !== 'x-default' && !HREFLANG_VALUE.test(alt.hreflang)) {
+        const code = String(alt.hreflang);
+        const reason = /^[A-Z]{2}$/.test(code)
           ? 'that is a country code, and the language subtag comes first'
-          : 'not a valid language or language-region value';
+          : 'not a valid language, language-script or language-region value';
         out.push(p('hreflang-invalid-code', `${page.url} declares hreflang="${alt.hreflang}"; ${reason}`));
       }
       if (codes.has(alt.hreflang) && codes.get(alt.hreflang) !== alt.href) {
@@ -230,9 +252,15 @@ function jsonldSyntax(html) {
     }
   }
 
+  // A duplicate can only be asserted for nodes that carry an identity. Two
+  // anonymous nodes of the same type are usually two different things, and an
+  // earlier version of this check collapsed them into one signature and
+  // reported them as a duplicate. A false positive costs more than a missing
+  // check, because it teaches the reader to ignore the checker.
   const signatures = parsed
     .flatMap(collectNodes)
-    .map((node) => `${typesOf(node).join('/')}:${node.name || node['@id'] || ''}`);
+    .filter((node) => node.name || node['@id'])
+    .map((node) => `${typesOf(node).join('/')}:${node.name || node['@id']}`);
   const duplicate = [...new Set(signatures.filter((s, i) => signatures.indexOf(s) !== i))];
   if (duplicate.length) {
     out.push(p('jsonld-duplicate-entity', `the same entity is declared twice: ${duplicate.join(', ')}`));
@@ -370,12 +398,18 @@ function sitemap(xml) {
   });
   const doc = parser.parse(xml);
 
-  if (doc.sitemapindex && doc.urlset) {
-    return [p('sitemap-index-mixed-with-urls', 'the file is both a sitemap index and a urlset')];
-  }
   if (doc.sitemapindex) return out;
 
-  const urls = (doc.urlset && doc.urlset.url) || [];
+  // A file that is neither a urlset nor a sitemap index used to produce zero
+  // problems, because the URL loop simply iterated an empty list. A wrong root
+  // element, a sitemap saved from the wrong template, or an HTML error page
+  // served at the sitemap URL all landed in that hole and were reported clean.
+  if (!doc.urlset) {
+    const root = Object.keys(doc).find((k) => k !== '?xml') ?? 'nothing';
+    return [p('sitemap-no-urlset', `the root element is <${root}>, so this is neither a urlset nor a sitemap index`)];
+  }
+
+  const urls = doc.urlset.url || [];
   if (urls.length > 50000) {
     out.push(p('sitemap-too-many-urls', `${urls.length} URLs; the limit is 50,000 per file`));
   }
@@ -395,7 +429,7 @@ function sitemap(xml) {
       out.push(p('sitemap-lastmod-missing', `${loc} has no lastmod, the only per-URL hint in this file Google uses`));
     } else {
       const lastmod = String(entry.lastmod);
-      if (!W3C_DATE.test(lastmod)) {
+      if (!isW3CDatetime(lastmod)) {
         out.push(p('sitemap-lastmod-invalid', `lastmod "${lastmod}" is not a W3C datetime, so it is ignored`));
       } else if (new Date(lastmod).getTime() > Date.now() + 86400000) {
         out.push(p('sitemap-lastmod-future', `lastmod "${lastmod}" is in the future`));
@@ -497,8 +531,13 @@ function robots(body) {
     }
   }
 
+  // Asset entries go through pathOf for the same reason page entries do: an
+  // asset list is normally copied out of a browser network panel, so it arrives
+  // as a full URL, and matching a full URL against a robots.txt path matches
+  // nothing at all. Until this was fixed, the check passed every site whose
+  // render assets were listed the way they are usually collected.
   for (const asset of site.renderAssets || []) {
-    if (blocked(asset)) {
+    if (blocked(pathOf(asset))) {
       out.push(p('robots-blocks-render-assets', `${asset} is Disallowed; blocking it changes how the page renders for the crawler`));
     }
   }

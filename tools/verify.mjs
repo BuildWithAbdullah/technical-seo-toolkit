@@ -11,7 +11,11 @@
  *   example is expected to trigger.
  *
  *   pass.*  must produce zero problems.
- *   fail.*  must produce at least one of the expected rule ids.
+ *   fail.*  must produce at least one of the expected rule ids, and at least
+ *           one of them must be a real fault rather than the absence of a
+ *           thing. A page with no h1 is a failing heading example and so is a
+ *           blank document, so an absence on its own proves only that the file
+ *           is empty. The absence findings are named in catalogue.mjs.
  *
  * Either of those failing is a hard CI failure, so a pattern cannot quietly
  * stop being true.
@@ -28,6 +32,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { checkers } from './checkers.mjs';
+import { absenceIds } from './catalogue.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PATTERNS = path.join(ROOT, 'patterns');
@@ -76,6 +81,10 @@ async function main() {
     if (hit.length === 0) {
       problems.push(
         `${fail.name} did not trigger any of [${expected.join(', ')}]; the checker saw [${failIds.join(', ') || 'nothing'}]`
+      );
+    } else if (hit.every((id) => absenceIds.has(id))) {
+      problems.push(
+        `${fail.name} triggered only absence findings [${hit.join(', ')}], which an empty file would also trigger`
       );
     }
 
