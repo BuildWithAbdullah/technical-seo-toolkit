@@ -9,10 +9,37 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22', '24']
+    name: node ${{ matrix.node }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: ${{ matrix.node }}
       - run: npm install
+      # The unit suite first: it is the only thing here that can tell you which
+      # check broke rather than that something did.
+      - run: npm test
+      # Then the pattern pairs, then the repository itself, then the generated
+      # document, which fails if the catalogue changed and docs were not rebuilt.
       - run: npm run verify
+      - run: npm run check
+      - run: npm run docs -- --check
+
+  engines:
+    runs-on: ubuntu-latest
+    name: install on the declared floor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.18.1'
+      # The engines range is a promise about what this package installs on, so it
+      # is tested rather than asserted. The floor is 20.18.1 because that is what
+      # cheerio declares, and the earlier >=20.0.0 was a range this package could
+      # not actually install on.
+      - run: npm install --engine-strict
+      - run: npm test
