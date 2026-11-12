@@ -12,8 +12,9 @@
  * document stays current.
  */
 
-import { writeFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { writeFile, readFile } from 'node:fs/promises';
+import { realpathSync } from 'node:fs';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 
 import { findings, byKind, absenceIds } from './catalogue.mjs';
@@ -84,12 +85,34 @@ export function render() {
   return lines.join('\n');
 }
 
-// The CLI half runs only when this file is the entry point, so that importing
-// render() from tools/check.mjs has no side effects.
-if (import.meta.url === `file://${process.argv[1]}`) {
+/**
+ * The CLI half runs only when this file is the entry point, so that importing
+ * render() has no side effects.
+ *
+ * It used to compare import.meta.url against a file URL built by concatenating
+ * the scheme onto process.argv[1]. That is wrong on Windows, where a path does
+ * not begin with a slash, so the comparison never matched and both halves of
+ * this tool did nothing at all: npm run docs wrote no file and exited 0, and
+ * the --check form CI depends on reported nothing and exited 0 as well. A
+ * staleness gate that passes by never running is worse than no gate.
+ *
+ * Both sides are now resolved to a real path, because npm installs a bin as a
+ * symlink and Node resolves a module path to its realpath, and argv[1] is
+ * checked first because realpathSync throws when the module is imported by
+ * node -e.
+ */
+const invokedDirectly = (() => {
+  if (!process.argv[1]) return false;
+  try {
+    return pathToFileURL(realpathSync(process.argv[1])).href === import.meta.url;
+  } catch {
+    return false;
+  }
+})();
+
+if (invokedDirectly) {
   const out = render();
   if (process.argv.includes('--check')) {
-    const { readFile } = await import('node:fs/promises');
     const current = await readFile(TARGET, 'utf8').catch(() => null);
     if (current !== out) {
       console.error('docs/every-finding.md is out of date. Run: npm run docs');
