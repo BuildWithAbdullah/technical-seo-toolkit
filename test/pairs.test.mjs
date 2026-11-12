@@ -90,9 +90,9 @@ test('every failing example triggers evidence that is not merely an absence', ()
 
 test('no expected finding fires on an empty artefact unless it reports an absence', () => {
   for (const { dir, meta } of patterns) {
-    const empty = emptyArtefacts[meta.kind];
-    assert.ok(empty !== undefined, `no empty artefact defined for kind "${meta.kind}"`);
-    const produced = checkers[meta.kind](empty, `empty.${meta.kind}`).map((p) => p.id);
+    const empties = emptyArtefacts[meta.kind];
+    assert.ok(Array.isArray(empties) && empties.length > 0, `no empty artefact defined for kind "${meta.kind}"`);
+    const produced = empties.flatMap((empty) => checkers[meta.kind](empty, `empty.${meta.kind}`).map((p) => p.id));
     const unexpected = produced.filter((id) => !absenceIds.has(id));
     assert.deepEqual(
       unexpected,

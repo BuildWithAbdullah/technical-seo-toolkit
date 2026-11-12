@@ -9,10 +9,20 @@
  * uncatalogued, and by the per-kind test files, which make the tighter
  * assertions about exactly what a given artefact should and should not produce.
  *
- * A case declares the ids it must produce. It is allowed to produce others:
- * several of these faults genuinely travel together, and forcing every artefact
- * to isolate one id would mean writing artefacts no real site resembles. Where
- * an exact set matters, the per-kind file asserts it.
+ * A case declares the exact set of ids it produces.
+ *
+ * It did not always. The first version of this contract said a case was allowed
+ * to produce findings it had not declared, on the reasoning that some of these
+ * faults genuinely travel together, and test/catalogue.test.mjs asserted
+ * inclusion only. The consequence is worth stating plainly: under that contract
+ * every false positive the corpus triggered was invisible to the suite by
+ * construction. A case about one fault could emit four more and pass.
+ *
+ * So `expect` names the fault the artefact is about, `also` names the findings
+ * that legitimately travel with it, and the assertion is that the produced set
+ * equals the union of the two exactly. Anything else fails, which is what makes
+ * a new false positive a build failure rather than a thing nobody looks at.
+ * Where `also` is non-empty there is a reason beside it.
  */
 
 const page = (head, body = '') =>
@@ -25,6 +35,12 @@ const sitemapFile = (inner) =>
 
 const entry = (loc, extra = '<lastmod>2026-01-15</lastmod>') => `  <url><loc>${loc}</loc>${extra}</url>`;
 
+const sitemapIndexFile = (inner) =>
+  `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${inner}\n</sitemapindex>`;
+
+const childSitemap = (loc, extra = '<lastmod>2026-01-15</lastmod>') =>
+  `  <sitemap><loc>${loc}</loc>${extra}</sitemap>`;
+
 const CLEAN_ENTRY = entry('https://example.com/a');
 
 // Fifty thousand and one URLs, built rather than stored. Every one of them is
@@ -35,6 +51,16 @@ const oversizedSitemap = () => {
     rows.push(entry(`https://example.com/p/${i}`));
   }
   return sitemapFile(rows.join('\n'));
+};
+
+// Fifty thousand and one child sitemaps, built rather than stored, for the same
+// reason as the file above: the only finding it can produce is the count.
+const oversizedSitemapIndex = () => {
+  const rows = [];
+  for (let i = 0; i < 50001; i++) {
+    rows.push(childSitemap(`https://example.com/sitemaps/${i}.xml`));
+  }
+  return sitemapIndexFile(rows.join('\n'));
 };
 
 export const cases = [
@@ -119,7 +145,7 @@ export const cases = [
   },
   {
     kind: 'hreflang',
-    label: 'a country code used where a language belongs',
+    label: 'a bare country code used where a language belongs',
     body: JSON.stringify({
       pages: [
         {
@@ -131,7 +157,7 @@ export const cases = [
         },
       ],
     }),
-    expect: ['hreflang-invalid-code'],
+    expect: ['hreflang-region-without-language'],
   },
   {
     kind: 'hreflang',
@@ -148,6 +174,9 @@ export const cases = [
       ],
     }),
     expect: ['hreflang-relative'],
+    // A relative href cannot match any page URL in the cluster, so it dangles
+    // as well. The two always travel together and neither is wrong.
+    also: ['hreflang-dangling-target'],
   },
   {
     kind: 'hreflang',
@@ -231,7 +260,7 @@ export const cases = [
   {
     kind: 'analytics',
     label: 'two GA4 properties on one page view',
-    body: page('<script src="https://www.googletagmanager.com/gtag/js?id=G-AAAAAA111"></script><script>gtag("config","G-AAAAAA111");gtag("config","G-BBBBBB222");</script>'),
+    body: page('<script src="https://www.googletagmanager.com/gtag/js?id=G-AAAAAA111"></script><script src="https://www.googletagmanager.com/gtag/js?id=G-BBBBBB222"></script><script>gtag("config","G-AAAAAA111");gtag("config","G-BBBBBB222");</script>'),
     expect: ['analytics-multiple-ga4-properties'],
   },
   {
@@ -243,7 +272,7 @@ export const cases = [
   {
     kind: 'analytics',
     label: 'the same gtag config running twice',
-    body: page('<script>gtag("config","G-AAAAAA111");</script><script>gtag("config","G-AAAAAA111");</script>'),
+    body: page('<script src="https://www.googletagmanager.com/gtag/js?id=G-AAAAAA111"></script><script>gtag("config","G-AAAAAA111");</script><script>gtag("config","G-AAAAAA111");</script>'),
     expect: ['analytics-duplicate-config'],
   },
 
@@ -555,6 +584,288 @@ export const cases = [
     body: JSON.stringify({ redirects: [{ from: '/a', to: '/b', status: 302 }] }),
     expect: ['redirect-temporary-for-permanent-move'],
   },
+  // ----------------------------------------------- the reasons added in the
+  // 12 November rebuild. Each one is a fault that this repository reported as
+  // clean, or reported under the wrong reason, for the whole of its life
+  // before that date.
+
+  // ------------------------------------------------------------- canonical
+  {
+    kind: 'canonical',
+    label: 'canonical href is empty, which is an unrendered template variable',
+    body: page('<link rel="canonical" href="">'),
+    expect: ['canonical-empty-href'],
+  },
+  {
+    kind: 'canonical',
+    label: 'canonical element has no href attribute at all',
+    body: page('<link rel="canonical">'),
+    expect: ['canonical-empty-href'],
+  },
+  {
+    kind: 'canonical',
+    label: 'canonical href is whitespace, which used to be read as a relative URL',
+    body: page('<link rel="canonical" href="   ">'),
+    expect: ['canonical-empty-href'],
+  },
+  {
+    kind: 'canonical',
+    label: 'canonical carries a fragment, which canonicalisation drops',
+    body: page('<link rel="canonical" href="https://example.com/a#pricing">'),
+    expect: ['canonical-has-fragment'],
+  },
+
+  // -------------------------------------------------------------- hreflang
+  {
+    kind: 'hreflang',
+    label: 'an hreflang value that is not a language in any spelling',
+    body: JSON.stringify({
+      pages: [{ url: 'https://example.com/a/', alternates: [{ hreflang: 'english', href: 'https://example.com/a/' }] }],
+    }),
+    expect: ['hreflang-invalid-code'],
+  },
+  {
+    kind: 'hreflang',
+    label: 'an alternate with an empty hreflang value',
+    body: JSON.stringify({
+      pages: [{ url: 'https://example.com/a/', alternates: [{ hreflang: '', href: 'https://example.com/a/' }] }],
+    }),
+    expect: ['hreflang-empty-code'],
+  },
+  {
+    kind: 'hreflang',
+    label: 'an alternate with a language and no href',
+    body: JSON.stringify({
+      pages: [{
+        url: 'https://example.com/a/',
+        alternates: [{ hreflang: 'en', href: 'https://example.com/a/' }, { hreflang: 'de', href: '' }],
+      }],
+    }),
+    expect: ['hreflang-empty-href'],
+  },
+  {
+    kind: 'hreflang',
+    label: 'two different x-default targets on one page',
+    body: JSON.stringify({
+      pages: [{
+        url: 'https://example.com/a/',
+        alternates: [
+          { hreflang: 'en', href: 'https://example.com/a/' },
+          { hreflang: 'x-default', href: 'https://example.com/a/' },
+          { hreflang: 'x-default', href: 'https://example.com/b/' },
+        ],
+      }],
+    }),
+    expect: ['hreflang-multiple-x-default'],
+  },
+  {
+    kind: 'hreflang',
+    label: 'a page in the cluster that declares no alternates at all',
+    body: JSON.stringify({
+      pages: [
+        { url: 'https://example.com/a/', alternates: [{ hreflang: 'en', href: 'https://example.com/a/' }, { hreflang: 'de', href: 'https://example.com/b/' }] },
+        { url: 'https://example.com/b/', alternates: [] },
+      ],
+    }),
+    expect: ['hreflang-page-without-alternates'],
+    also: ['hreflang-not-reciprocal'],
+  },
+  {
+    kind: 'hreflang',
+    label: 'every value names a region and none is x-default',
+    body: JSON.stringify({
+      pages: [
+        { url: 'https://example.com/gb/', alternates: [{ hreflang: 'en-gb', href: 'https://example.com/gb/' }, { hreflang: 'en-us', href: 'https://example.com/us/' }] },
+        { url: 'https://example.com/us/', alternates: [{ hreflang: 'en-us', href: 'https://example.com/us/' }, { hreflang: 'en-gb', href: 'https://example.com/gb/' }] },
+      ],
+    }),
+    expect: ['hreflang-no-x-default'],
+  },
+
+  // ------------------------------------------------------------- analytics
+  {
+    kind: 'analytics',
+    label: 'a page with no measurement of any kind',
+    body: page(''),
+    expect: ['analytics-none'],
+  },
+  {
+    kind: 'analytics',
+    label: 'a gtag config with no library and no container to receive it',
+    body: page('<script>gtag("config","G-AAAAAA111");</script>'),
+    expect: ['analytics-gtag-without-library'],
+  },
+  {
+    kind: 'analytics',
+    label: 'the library loads one property and the config names another',
+    body: page('<script src="https://www.googletagmanager.com/gtag/js?id=G-AAAAAA111"></script><script>gtag("config","G-BBBBBB222");</script>'),
+    expect: ['analytics-config-id-not-loaded'],
+    also: ['analytics-multiple-ga4-properties'],
+  },
+
+  // --------------------------------------------------------- structured data
+  {
+    kind: 'jsonld-syntax',
+    label: 'a block that parses as JSON and declares no @context',
+    body: page(ld(JSON.stringify({ '@type': 'Organization', '@id': 'https://example.com/#org', name: 'Acme' }))),
+    expect: ['jsonld-no-context'],
+  },
+  {
+    kind: 'jsonld-graph',
+    label: 'a node with no @type, which nothing treats as an entity',
+    body: page(ld(JSON.stringify({ '@context': 'https://schema.org', '@id': 'https://example.com/#x', name: 'Acme' }))),
+    expect: ['jsonld-node-without-type'],
+  },
+  {
+    kind: 'jsonld-breadcrumb',
+    label: 'a trail on a page that states no og:url and no canonical',
+    body: page(ld(JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: [{ '@type': 'ListItem', position: 1, name: 'Home', item: 'https://example.com/' }],
+    }))),
+    expect: ['breadcrumb-page-url-unknown'],
+  },
+
+  // --------------------------------------------------------------- sitemap
+  {
+    kind: 'sitemap',
+    label: 'a urlset with no entries in it',
+    body: sitemapFile(''),
+    expect: ['sitemap-empty'],
+  },
+  {
+    kind: 'sitemap',
+    label: 'a url entry with no loc element at all',
+    body: sitemapFile('  <url><lastmod>2026-01-15</lastmod></url>'),
+    expect: ['sitemap-url-without-loc'],
+  },
+  {
+    kind: 'sitemap',
+    label: 'a lastmod element that is present and empty',
+    body: sitemapFile('  <url><loc>https://example.com/a</loc><lastmod></lastmod></url>'),
+    expect: ['sitemap-lastmod-empty'],
+  },
+
+  // ------------------------------------------------- sitemap: the index file
+  {
+    kind: 'sitemap',
+    label: 'a sitemap index that lists no child sitemaps',
+    body: sitemapIndexFile(''),
+    expect: ['sitemap-index-empty'],
+  },
+  {
+    kind: 'sitemap',
+    label: 'a sitemap entry in an index with no loc',
+    body: sitemapIndexFile('  <sitemap><lastmod>2026-01-15</lastmod></sitemap>'),
+    expect: ['sitemap-index-without-loc'],
+  },
+  {
+    kind: 'sitemap',
+    label: 'a child sitemap named by a relative URL',
+    body: sitemapIndexFile('  <sitemap><loc>/sitemaps/products.xml</loc><lastmod>2026-01-15</lastmod></sitemap>'),
+    expect: ['sitemap-index-loc-relative'],
+  },
+  {
+    kind: 'sitemap',
+    label: 'a child sitemap named over http',
+    body: sitemapIndexFile('  <sitemap><loc>http://example.com/sitemaps/products.xml</loc><lastmod>2026-01-15</lastmod></sitemap>'),
+    expect: ['sitemap-index-loc-non-https'],
+  },
+  {
+    kind: 'sitemap',
+    label: 'the same child sitemap listed twice in an index',
+    body: sitemapIndexFile(
+      '  <sitemap><loc>https://example.com/sitemaps/a.xml</loc><lastmod>2026-01-15</lastmod></sitemap>\n' +
+      '  <sitemap><loc>https://example.com/sitemaps/a.xml</loc><lastmod>2026-01-15</lastmod></sitemap>'
+    ),
+    expect: ['sitemap-index-duplicate-loc'],
+  },
+  {
+    kind: 'sitemap',
+    label: 'a child sitemap with no lastmod, which is the refetch signal',
+    body: sitemapIndexFile('  <sitemap><loc>https://example.com/sitemaps/a.xml</loc></sitemap>'),
+    expect: ['sitemap-index-lastmod-missing'],
+  },
+  {
+    kind: 'sitemap',
+    label: 'a child sitemap with an empty lastmod element',
+    body: sitemapIndexFile('  <sitemap><loc>https://example.com/sitemaps/a.xml</loc><lastmod></lastmod></sitemap>'),
+    expect: ['sitemap-index-lastmod-empty'],
+  },
+  {
+    kind: 'sitemap',
+    label: 'a child sitemap with a lastmod that is not a W3C datetime',
+    body: sitemapIndexFile('  <sitemap><loc>https://example.com/sitemaps/a.xml</loc><lastmod>15 January 2026</lastmod></sitemap>'),
+    expect: ['sitemap-index-lastmod-invalid'],
+  },
+  {
+    kind: 'sitemap',
+    label: 'a sitemap index over the fifty thousand child limit',
+    body: oversizedSitemapIndex(),
+    expect: ['sitemap-index-too-many-sitemaps'],
+  },
+
+  // ---------------------------------------------------------------- robots
+  {
+    kind: 'robots',
+    label: 'a Noindex line in robots.txt, unsupported since September 2019',
+    body: JSON.stringify({
+      robotsTxt: 'User-agent: *\nNoindex: /private/\nSitemap: https://example.com/sitemap.xml',
+    }),
+    expect: ['robots-noindex-directive'],
+  },
+  {
+    kind: 'robots',
+    label: 'a Crawl-delay line, which Google ignores',
+    body: JSON.stringify({
+      robotsTxt: 'User-agent: *\nCrawl-delay: 10\nDisallow: /tmp/\nSitemap: https://example.com/sitemap.xml',
+    }),
+    expect: ['robots-crawl-delay'],
+  },
+
+  // ------------------------------------------------------------- redirects
+  {
+    kind: 'robots',
+    // The other severity this id is emitted at. A blocked stylesheet changes
+    // what the rendered page contains and is an error; a blocked image changes
+    // how it looks and not what it says, so it is a warning. Without this case
+    // the catalogue would declare a severity nothing had ever produced, which
+    // test/catalogue.test.mjs treats as a failure.
+    label: 'a blocked image render asset, which is the warning severity of the same id',
+    body: JSON.stringify({
+      robotsTxt: 'User-agent: *\nDisallow: /assets/\nSitemap: https://example.com/sitemap.xml',
+      renderAssets: ['https://example.com/assets/hero.png'],
+    }),
+    expect: ['robots-blocks-render-assets'],
+  },
+  {
+    kind: 'redirects',
+    // Three hops, which is long enough that Google stops following, so the
+    // same id is emitted at error here and at warning for the two hop rule
+    // inside the very same map.
+    label: 'a three hop chain, which reaches both severities of redirect-chain',
+    body: JSON.stringify({
+      redirects: [
+        { from: '/a/', to: '/b/', status: 301 },
+        { from: '/b/', to: '/c/', status: 301 },
+        { from: '/c/', to: '/d/', status: 301 },
+      ],
+    }),
+    expect: ['redirect-chain'],
+  },
+  {
+    kind: 'redirects',
+    label: 'a rule in a redirect map whose status is not a redirect',
+    body: JSON.stringify({ redirects: [{ from: '/old/', to: '/new/', status: 200 }] }),
+    expect: ['redirect-status-not-a-redirect'],
+  },
+  {
+    kind: 'redirects',
+    label: 'a rule that records no status at all',
+    body: JSON.stringify({ redirects: [{ from: '/old/', to: '/new/' }] }),
+    expect: ['redirect-status-missing'],
+  },
 ];
 
 /**
@@ -567,17 +878,24 @@ export const cases = [
  * and a pattern whose only evidence is a finding that fires here has proved
  * nothing about its own failing example.
  */
+/**
+ * Each kind maps to every empty artefact it has, because a kind can have more
+ * than one. The sitemap protocol defines two root elements and an empty file
+ * of each is a different empty artefact: an empty urlset and an empty sitemap
+ * index report different absences, and only one of them was modelled here
+ * until the sitemap index was given checks of its own.
+ */
 export const emptyArtefacts = {
-  canonical: page(''),
-  headings: page(''),
-  analytics: page(''),
-  'jsonld-syntax': page(''),
-  'jsonld-graph': page(''),
-  'jsonld-breadcrumb': page(''),
-  hreflang: JSON.stringify({ pages: [] }),
-  sitemap: sitemapFile(''),
-  robots: JSON.stringify({ robotsTxt: '' }),
-  redirects: JSON.stringify({ redirects: [] }),
+  canonical: [page('')],
+  headings: [page('')],
+  analytics: [page('')],
+  'jsonld-syntax': [page('')],
+  'jsonld-graph': [page('')],
+  'jsonld-breadcrumb': [page('')],
+  hreflang: [JSON.stringify({ pages: [] })],
+  sitemap: [sitemapFile(''), sitemapIndexFile('')],
+  robots: [JSON.stringify({ robotsTxt: '' })],
+  redirects: [JSON.stringify({ redirects: [] })],
 };
 
 // The absence findings live in the catalogue, next to the findings themselves,

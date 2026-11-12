@@ -42,3 +42,19 @@ export const validCluster = (codeA = 'en', codeB = 'de') =>
     ['https://example.com/a/', [[codeA, 'https://example.com/a/'], [codeB, 'https://example.com/b/']]],
     ['https://example.com/b/', [[codeB, 'https://example.com/b/'], [codeA, 'https://example.com/a/']]],
   ]);
+
+/**
+ * The same control cluster with an x-default, for use when every value in it
+ * names a region.
+ *
+ * A cluster where every alternate carries a region and none is x-default has
+ * no answer for a visitor from a country it did not name, which is its own
+ * finding. So a test about whether a value shape is accepted has to declare an
+ * x-default, or it ends up asserting two things and reading as though it
+ * asserts one.
+ */
+export const regionalCluster = (codeA, codeB) =>
+  cluster([
+    ['https://example.com/a/', [[codeA, 'https://example.com/a/'], [codeB, 'https://example.com/b/'], ['x-default', 'https://example.com/a/']]],
+    ['https://example.com/b/', [[codeB, 'https://example.com/b/'], [codeA, 'https://example.com/a/'], ['x-default', 'https://example.com/a/']]],
+  ]);

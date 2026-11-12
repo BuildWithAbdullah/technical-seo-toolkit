@@ -80,6 +80,12 @@ test('single quotes and spacing in the gtag call are read the same way', () => {
   );
 });
 
-test('a page with no measurement on it at all is clean', () => {
-  assert.deepEqual(run('analytics', page('', '<h1>Copy</h1>')), []);
+test('a page with no measurement on it at all is reported as having none', () => {
+  // Reported at note severity rather than passed in silence. The absence of
+  // measurement is not a fault in the page, but it is the answer to the
+  // question this checker exists to ask, and a clean result used to be
+  // indistinguishable from a page whose analytics were correct.
+  const problems = runFull('analytics', page('', '<h1>Copy</h1>'));
+  assert.deepEqual(problems.map((p) => p.id), ['analytics-none']);
+  assert.equal(problems[0].severity, 'note');
 });

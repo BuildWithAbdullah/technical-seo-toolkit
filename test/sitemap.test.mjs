@@ -26,11 +26,60 @@ test('a minimal valid sitemap is clean', () => {
   assert.deepEqual(run('sitemap', sitemap(url('https://example.com/a'))), []);
 });
 
-test('a sitemap index is read as an index and not held to the URL rules', () => {
+test('a sitemap index is checked, and it used to be checked for nothing at all', () => {
+  // This is the defect that hid behind the best-named test in the repository.
+  // The test here used to be called "a sitemap index is read as an index and
+  // not held to the URL rules" and it asserted that an index produced no
+  // findings. That reads like a deliberate distinction between two file
+  // formats. What it actually required was that the checker return
+  // immediately on seeing a sitemapindex root, so an index with a relative
+  // loc, an http loc, a duplicate entry and an unparseable lastmod was
+  // reported completely clean. That is the file most large sites submit, and
+  // every fault in it costs a whole child sitemap rather than one URL.
+  const problems = runFull('sitemap', [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    '  <sitemap><loc>/sitemaps/products.xml</loc><lastmod>2026-01-15</lastmod></sitemap>',
+    '  <sitemap><loc>http://example.com/sitemaps/a.xml</loc><lastmod>15 January 2026</lastmod></sitemap>',
+    '  <sitemap><loc>http://example.com/sitemaps/a.xml</loc><lastmod>2026-01-15</lastmod></sitemap>',
+    '</sitemapindex>',
+  ].join('\n'));
   assert.deepEqual(
-    run('sitemap', '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex><sitemap><loc>https://example.com/s1.xml</loc></sitemap></sitemapindex>'),
+    [...new Set(problems.map((p) => p.id))].sort(),
+    [
+      'sitemap-index-duplicate-loc',
+      'sitemap-index-lastmod-invalid',
+      'sitemap-index-loc-non-https',
+      'sitemap-index-loc-relative',
+    ]
+  );
+});
+
+test('a correct sitemap index is clean, so the rules above are about the file and not the format', () => {
+  assert.deepEqual(
+    run('sitemap', [
+      '<?xml version="1.0" encoding="UTF-8"?>',
+      '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+      '  <sitemap><loc>https://example.com/sitemaps/products.xml</loc><lastmod>2026-01-15</lastmod></sitemap>',
+      '</sitemapindex>',
+    ].join('\n')),
     []
   );
+});
+
+test('the index findings are separate ids from the urlset ones', () => {
+  // Deliberate, because the cost differs by three orders of magnitude: a bad
+  // loc in a urlset loses one URL and a bad loc in an index loses every URL in
+  // a child sitemap. Sharing the id would make the two indistinguishable in a
+  // report and in the catalogue.
+  const index = runFull('sitemap', [
+    '<?xml version="1.0" encoding="UTF-8"?>',
+    '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    '  <sitemap><loc>/relative.xml</loc><lastmod>2026-01-15</lastmod></sitemap>',
+    '</sitemapindex>',
+  ].join('\n'));
+  assert.deepEqual(index.map((p) => p.id), ['sitemap-index-loc-relative']);
+  assert.ok(!index.some((p) => p.id === 'sitemap-loc-relative'));
 });
 
 test('malformed XML is reported with the line it failed on', () => {
@@ -46,8 +95,19 @@ test('a well-formed file that is not a sitemap is reported, not passed', () => {
   assert.match(problems[0].message, /<pages>/, 'the message should name the root element it found');
 });
 
-test('an empty urlset is clean', () => {
-  assert.deepEqual(run('sitemap', sitemap('')), []);
+test('an empty urlset is reported, because a sitemap that says nothing was still submitted', () => {
+  // This used to assert that an empty urlset is clean. An empty sitemap is a
+  // file somebody built, submitted and is now waiting on, and the most common
+  // cause is a generator that found no published posts. Reporting it clean is
+  // reporting that the submission worked.
+  assert.deepEqual(run('sitemap', sitemap('')), ['sitemap-empty']);
+});
+
+test('an empty sitemap index is reported too, and under its own id', () => {
+  assert.deepEqual(
+    run('sitemap', '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></sitemapindex>'),
+    ['sitemap-index-empty']
+  );
 });
 
 test('a relative loc is reported, and an http loc is reported as costing a redirect', () => {

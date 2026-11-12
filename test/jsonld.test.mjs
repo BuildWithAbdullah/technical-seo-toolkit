@@ -263,11 +263,39 @@ test('the page URL is taken from the canonical when there is no og:url', () => {
   assert.deepEqual(run('jsonld-breadcrumb', body), []);
 });
 
-test('with no page URL at all, the trail is checked for what can be checked', () => {
-  // No og:url and no canonical means there is nothing to compare the trail
-  // against, so the comparisons are skipped rather than guessed at.
+test('with no page URL at all, the checker says so rather than passing in silence', () => {
+  // The test that used to sit here was called "the trail is checked for what
+  // can be checked" and asserted that the result was clean. Read as a claim
+  // rather than as coverage, it was requiring the checker to be silent about
+  // two of its seven rules not having run. Nothing in the output distinguished
+  // a rule that passed from a rule that was never asked, and a reader of a
+  // clean result would conclude the trail matched the page it was on.
+  //
+  // The refusal is now the finding. The two rules that need the page URL stay
+  // silent, and the fact that they did is reported.
   const body = page(node({ '@type': 'BreadcrumbList', itemListElement: [item(1, 'Home', 'https://example.com/'), item(2, 'A', 'https://example.com/a')] }));
-  assert.deepEqual(run('jsonld-breadcrumb', body), []);
+  const produced = run('jsonld-breadcrumb', body);
+  assert.deepEqual(produced, ['breadcrumb-page-url-unknown']);
+  for (const id of ['breadcrumb-last-item-not-this-page', 'breadcrumb-depth-mismatch']) {
+    assert.ok(!produced.includes(id), `${id} cannot be decided without the page URL and must not be guessed`);
+  }
+});
+
+test('the refusal is a note, not an error, because the artefact may be perfectly correct', () => {
+  const body = page(node({ '@type': 'BreadcrumbList', itemListElement: [item(1, 'Home', 'https://example.com/')] }));
+  const hit = runFull('jsonld-breadcrumb', body).find((p) => p.id === 'breadcrumb-page-url-unknown');
+  assert.ok(hit);
+  assert.equal(hit.severity, 'note');
+});
+
+test('once the page states its URL, the refusal disappears and the rules run', () => {
+  // The other direction. A refusal that fires whatever the input is not a
+  // refusal, it is a checker that always complains.
+  const body = page(
+    `<link rel="canonical" href="https://example.com/a">${node({ '@type': 'BreadcrumbList', itemListElement: [item(1, 'Home', 'https://example.com/'), item(2, 'A', 'https://example.com/a')] })}`
+  );
+  const produced = run('jsonld-breadcrumb', body);
+  assert.ok(!produced.includes('breadcrumb-page-url-unknown'));
 });
 
 test('an item URL given as a nested @id is read the same as a string', () => {
