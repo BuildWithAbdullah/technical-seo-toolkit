@@ -4,28 +4,101 @@
     {
       "url": "https://www.northwind.example/products/rye-starter",
       "alternates": [
-        { "hreflang": "en", "href": "https://www.northwind.example/products/rye-starter" },
-        { "hreflang": "de", "href": "https://www.northwind.example/de/produkte/roggen-starter" },
-        { "hreflang": "fr", "href": "https://www.northwind.example/fr/produits/levain-seigle" },
-        { "hreflang": "x-default", "href": "https://www.northwind.example/products/rye-starter" }
+        {
+          "hreflang": "en",
+          "href": "https://www.northwind.example/products/rye-starter"
+        },
+        {
+          "hreflang": "de",
+          "href": "https://www.northwind.example/de/produkte/roggen-starter"
+        },
+        {
+          "hreflang": "fr",
+          "href": "https://www.northwind.example/fr/produits/levain-seigle"
+        },
+        {
+          "hreflang": "es",
+          "href": "https://www.northwind.example/es/productos/masa-madre-centeno"
+        },
+        {
+          "hreflang": "x-default",
+          "href": "https://www.northwind.example/products/rye-starter"
+        }
       ]
     },
     {
       "url": "https://www.northwind.example/de/produkte/roggen-starter",
       "alternates": [
-        { "hreflang": "en", "href": "https://www.northwind.example/products/rye-starter" },
-        { "hreflang": "de", "href": "https://www.northwind.example/de/produkte/roggen-starter" },
-        { "hreflang": "fr", "href": "https://www.northwind.example/fr/produits/levain-seigle" },
-        { "hreflang": "x-default", "href": "https://www.northwind.example/products/rye-starter" }
+        {
+          "hreflang": "en",
+          "href": "https://www.northwind.example/products/rye-starter"
+        },
+        {
+          "hreflang": "de",
+          "href": "https://www.northwind.example/de/produkte/roggen-starter"
+        },
+        {
+          "hreflang": "fr",
+          "href": "https://www.northwind.example/fr/produits/levain-seigle"
+        },
+        {
+          "hreflang": "es",
+          "href": "https://www.northwind.example/es/productos/masa-madre-centeno"
+        },
+        {
+          "hreflang": "x-default",
+          "href": "https://www.northwind.example/products/rye-starter"
+        }
       ]
     },
     {
       "url": "https://www.northwind.example/fr/produits/levain-seigle",
       "alternates": [
-        { "hreflang": "en", "href": "https://www.northwind.example/products/rye-starter" },
-        { "hreflang": "de", "href": "https://www.northwind.example/de/produkte/roggen-starter" },
-        { "hreflang": "fr", "href": "https://www.northwind.example/fr/produits/levain-seigle" },
-        { "hreflang": "x-default", "href": "https://www.northwind.example/products/rye-starter" }
+        {
+          "hreflang": "en",
+          "href": "https://www.northwind.example/products/rye-starter"
+        },
+        {
+          "hreflang": "de",
+          "href": "https://www.northwind.example/de/produkte/roggen-starter"
+        },
+        {
+          "hreflang": "fr",
+          "href": "https://www.northwind.example/fr/produits/levain-seigle"
+        },
+        {
+          "hreflang": "es",
+          "href": "https://www.northwind.example/es/productos/masa-madre-centeno"
+        },
+        {
+          "hreflang": "x-default",
+          "href": "https://www.northwind.example/products/rye-starter"
+        }
+      ]
+    },
+    {
+      "url": "https://www.northwind.example/es/productos/masa-madre-centeno",
+      "alternates": [
+        {
+          "hreflang": "en",
+          "href": "https://www.northwind.example/products/rye-starter"
+        },
+        {
+          "hreflang": "de",
+          "href": "https://www.northwind.example/de/produkte/roggen-starter"
+        },
+        {
+          "hreflang": "fr",
+          "href": "https://www.northwind.example/fr/produits/levain-seigle"
+        },
+        {
+          "hreflang": "es",
+          "href": "https://www.northwind.example/es/productos/masa-madre-centeno"
+        },
+        {
+          "hreflang": "x-default",
+          "href": "https://www.northwind.example/products/rye-starter"
+        }
       ]
     }
   ]

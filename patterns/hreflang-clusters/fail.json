@@ -1,26 +1,60 @@
 {
-  "_comment": "The alternates each page in the cluster actually declares. Written as a cluster rather than a single page because reciprocity is the rule that matters and one page cannot show it.",
+  "_comment": "The alternates each page in the cluster actually declares. Written as a cluster rather than a single page because reciprocity is the rule that matters and one page cannot show it. The Spanish page is the one-directional pairing: the English page points at it and it points only at itself, so Google discards the pairing in both directions.",
   "pages": [
     {
       "url": "https://www.northwind.example/products/rye-starter",
       "alternates": [
-        { "hreflang": "de", "href": "https://www.northwind.example/de/produkte/roggen-starter" },
-        { "hreflang": "fr", "href": "https://www.northwind.example/fr/produits/levain-seigle" }
+        {
+          "hreflang": "de",
+          "href": "https://www.northwind.example/de/produkte/roggen-starter"
+        },
+        {
+          "hreflang": "fr",
+          "href": "https://www.northwind.example/fr/produits/levain-seigle"
+        },
+        {
+          "hreflang": "es",
+          "href": "https://www.northwind.example/es/productos/masa-madre-centeno"
+        }
       ]
     },
     {
       "url": "https://www.northwind.example/de/produkte/roggen-starter",
       "alternates": [
-        { "hreflang": "de", "href": "https://www.northwind.example/de/produkte/roggen-starter" },
-        { "hreflang": "en", "href": "https://www.northwind.example/products/rye-starter" }
+        {
+          "hreflang": "de",
+          "href": "https://www.northwind.example/de/produkte/roggen-starter"
+        },
+        {
+          "hreflang": "en",
+          "href": "https://www.northwind.example/products/rye-starter"
+        }
       ]
     },
     {
       "url": "https://www.northwind.example/fr/produits/levain-seigle",
       "alternates": [
-        { "hreflang": "fr", "href": "https://www.northwind.example/fr/produits/levain-seigle" },
-        { "hreflang": "UK", "href": "https://www.northwind.example/products/rye-starter" },
-        { "hreflang": "de", "href": "/de/produkte/roggen-starter" }
+        {
+          "hreflang": "fr",
+          "href": "https://www.northwind.example/fr/produits/levain-seigle"
+        },
+        {
+          "hreflang": "UK",
+          "href": "https://www.northwind.example/products/rye-starter"
+        },
+        {
+          "hreflang": "de",
+          "href": "/de/produkte/roggen-starter"
+        }
+      ]
+    },
+    {
+      "url": "https://www.northwind.example/es/productos/masa-madre-centeno",
+      "alternates": [
+        {
+          "hreflang": "es",
+          "href": "https://www.northwind.example/es/productos/masa-madre-centeno"
+        }
       ]
     }
   ]
