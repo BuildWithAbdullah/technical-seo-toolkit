@@ -11,8 +11,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      # Exact versions, all three components. A bare major is not a tested
+      # promise: actions/setup-node resolves '20' to the newest release of that
+      # line, so a matrix of bare majors silently stops testing the floor the
+      # day a new patch ships. The first entry is the declared engines floor
+      # and package.json has to agree with it, which npm run check asserts.
       matrix:
-        node: ['20', '22', '24']
+        node: ['20.18.1', '22.23.4', '24.11.1']
     name: node ${{ matrix.node }}
     steps:
       - uses: actions/checkout@v4
@@ -23,11 +28,21 @@ jobs:
       # The unit suite first: it is the only thing here that can tell you which
       # check broke rather than that something did.
       - run: npm test
-      # Then the pattern pairs, then the repository itself, then the generated
-      # document, which fails if the catalogue changed and docs were not rebuilt.
+      # Then the pattern pairs, as data.
       - run: npm run verify
+      # Then the same patterns through the real program, in both of its modes,
+      # one process per pattern. The suite above imports the checkers and calls
+      # them, which proves the functions work and not that the tool does.
+      - run: npm run verdicts
+      # Then the repository itself: a fixed list of named claims about this
+      # tree, including every count the README states.
       - run: npm run check
-      - run: npm run docs -- --check
+      # Then the generated documents, which fail if the catalogue or the limits
+      # manifest changed and the documents were not rebuilt.
+      - run: npm run docs:check
+      # And last, the entry points, which fail if a decision moved into a file
+      # no test can import.
+      - run: npm run thin
 
   engines:
     runs-on: ubuntu-latest
@@ -37,9 +52,31 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20.18.1'
-      # The engines range is a promise about what this package installs on, so it
-      # is tested rather than asserted. The floor is 20.18.1 because that is what
-      # cheerio declares, and the earlier >=20.0.0 was a range this package could
-      # not actually install on.
+      # The engines range is a promise about what this package installs on, so
+      # it is tested rather than asserted. The floor is 20.18.1 because that is
+      # what cheerio declares, and an earlier >=20.0.0 was a range this package
+      # could not actually install on.
       - run: npm install --engine-strict
       - run: npm test
+
+  engines-refusal:
+    runs-on: ubuntu-latest
+    name: the engines floor actually refuses
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.18.1'
+      # Installing at the floor passes whether or not --engine-strict does
+      # anything, so it proves nothing on its own. This raises the floor above
+      # the runtime and requires the install to fail. If it succeeds, the
+      # declared floor is decoration.
+      - name: raise the floor above the runtime and require a refusal
+        run: |
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.engines.node='>=99.0.0';fs.writeFileSync('package.json',JSON.stringify(p,null,2))"
+          if npm install --engine-strict; then
+            echo "an install at a floor above the runtime succeeded, so the engines field is not enforced"
+            exit 1
+          fi
+          echo "the engines floor refused the install, as it should"
+          git checkout package.json
