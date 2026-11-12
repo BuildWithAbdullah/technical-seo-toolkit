@@ -1,20 +1,24 @@
 {
   "name": "technical-seo-toolkit",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "private": true,
-  "description": "Crawlability, indexation, structured data and measurement patterns, each with a failing and a corrected example, and 62 catalogued findings every one of which is driven out of a real call in the test suite.",
+  "description": "Crawlability, indexation, structured data and measurement patterns for technical SEO, with a failing and a corrected example for each, 92 catalogued findings one per reason, every one driven out of a real call in the test suite, and 14 declared limits each asserted with a blind case and a contrast case.",
   "type": "module",
   "engines": {
     "node": ">=20.18.1"
   },
   "scripts": {
-    "test": "node --test --test-reporter=tap test/analytics.test.mjs test/canonical.test.mjs test/catalogue.test.mjs test/headings.test.mjs test/hreflang.test.mjs test/jsonld.test.mjs test/pairs.test.mjs test/redirects.test.mjs test/robots.test.mjs test/sitemap.test.mjs",
+    "test": "node --test --test-reporter=tap test/analytics.test.mjs test/canonical.test.mjs test/catalogue.test.mjs test/defects.test.mjs test/headings.test.mjs test/hreflang.test.mjs test/jsonld.test.mjs test/limits.test.mjs test/pairs.test.mjs test/redirects.test.mjs test/repo.test.mjs test/robots.test.mjs test/sitemap.test.mjs test/tools.test.mjs",
     "verify": "node tools/verify.mjs",
     "check": "node tools/check.mjs",
-    "docs": "node tools/catalogue-doc.mjs"
+    "docs": "node tools/catalogue-doc.mjs && node tools/limits-doc.mjs",
+    "verdicts": "node tools/audit-verdicts.mjs",
+    "thin": "node tools/entry-thin.mjs",
+    "count": "node tools/count-tests.mjs",
+    "docs:check": "node tools/catalogue-doc.mjs --check && node tools/limits-doc.mjs --check"
   },
   "devDependencies": {
-    "cheerio": "^1.0.0",
-    "fast-xml-parser": "^5.11.1"
+    "cheerio": "1.0.0",
+    "fast-xml-parser": "5.11.1"
   }
 }

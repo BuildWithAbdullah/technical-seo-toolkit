@@ -1,230 +1,153 @@
-# Technical SEO Toolkit
+# Technical SEO toolkit
 
-Crawlability, indexation, structured data and measurement patterns. Each one has
-a failing example and a corrected example, and every claim in the repository is
-executed: 142 tests, 62 catalogued findings each driven out of a real call, and
-1161 repository assertions over the tree itself.
+Crawlability, indexation, structured data and measurement, as patterns you can
+run rather than advice you have to believe.
 
-This exists because technical SEO advice is almost entirely unverifiable prose.
-A pattern nobody runs drifts, and a checklist item nobody can test becomes a
-belief.
+Every pattern in here is a pair of files: one that is broken in a specific,
+ordinary way, and one that is fixed. A checker reads both. The broken one has
+to produce exactly the findings its manifest declares, the fixed one has to
+produce none, and CI fails if either stops being true. An SEO pattern library
+that nobody runs is a list of opinions with syntax highlighting.
 
-## The part that matters more than the patterns
+**Six of the eleven patterns produce no report in Search Console.** That is the
+reason this repository exists. The crawlability faults that cost the most are
+the ones where, from Google's side, nothing went wrong: the page was fetched,
+the file parsed, the annotation was read and then discarded. There is no row in
+any report for a signal that was valid and ignored, so the only way to find
+these is to check the artefact yourself.
 
-**Six of the ten patterns produce no report in Search Console.**
+## What is in here
 
-Google tells you when it disagrees with your canonical, when a page redirects,
-when a URL is blocked. It does not tell you that your hreflang cluster points
-one way, that a structured data block failed to parse, that four templates
-describe four different organisations, that a redirect takes four hops, or that
-two analytics tags are counting every session twice.
+11 pattern pairs, each with a README explaining the fault, what it costs, and
+what Search Console will and will not tell you about it.
 
-Those failures are indistinguishable from never having done the work. They are
-found by looking, or by a check that runs on every commit, and not otherwise.
-The `gscReports` field in each `meta.json` records which category the pattern is
-in, and the verifier prints it.
-
-| Pattern | What breaks | In Search Console |
+| Pattern | Fault | Reported by Search Console |
 |---|---|---|
-| [Canonical tags](patterns/canonical-tags/) | Relative canonicals, staging leaking into production, two tags in one head | Yes, after the fact |
-| [Crawl versus index](patterns/robots-crawl-vs-index/) | Disallow plus noindex, so the noindex is never read and the URL cannot leave the index | Yes |
-| [Sitemap contents](patterns/sitemap-contents/) | priority and changefreq noise, unparseable lastmod, redirecting URLs submitted as canonical | Partly |
-| [Breadcrumbs](patterns/jsonld-breadcrumbs/) | A valid trail that describes a different page | Partly |
-| [Redirect maps](patterns/redirect-maps/) | Chains, loops, 302s on permanent moves | **No** |
-| [hreflang clusters](patterns/hreflang-clusters/) | One-directional links, missing self-reference, country codes used as languages | **No** |
-| [Structured data parsing](patterns/jsonld-parses/) | Truncated, escaped, duplicated and empty JSON-LD, all failing silently | **No** |
-| [Entity graph](patterns/jsonld-entity-graph/) | The organisation described from scratch on every template | **No** |
-| [Heading outline](patterns/heading-outline/) | No h1, skipped levels, paragraphs marked up as headings | **No** |
-| [Analytics tag hygiene](patterns/analytics-tag-hygiene/) | Dead UA properties, duplicate tags, containers owned by somebody else | **No** |
+| [`patterns/canonical-tags/`](patterns/canonical-tags/) | Canonicals that are duplicated, relative, empty or outside the head | Partly, and late |
+| [`patterns/hreflang-clusters/`](patterns/hreflang-clusters/) | Clusters that are one-directional, do not name themselves, or use values Google cannot read | No |
+| [`patterns/heading-outline/`](patterns/heading-outline/) | An outline that does not say what the page is | No |
+| [`patterns/analytics-tag-hygiene/`](patterns/analytics-tag-hygiene/) | Double counting, dead property ids, configuration nothing receives | No |
+| [`patterns/jsonld-parses/`](patterns/jsonld-parses/) | Structured data that is discarded before it is read | No |
+| [`patterns/jsonld-entity-graph/`](patterns/jsonld-entity-graph/) | A graph that describes four organisations and means one | No |
+| [`patterns/jsonld-breadcrumbs/`](patterns/jsonld-breadcrumbs/) | A trail that does not match the URL it is on | Yes |
+| [`patterns/sitemap-contents/`](patterns/sitemap-contents/) | A sitemap whose per-URL hints are all ignored | Partly |
+| [`patterns/sitemap-index-files/`](patterns/sitemap-index-files/) | An index whose children are never fetched, where each fault costs a whole file of URLs | Partly |
+| [`patterns/robots-crawl-vs-index/`](patterns/robots-crawl-vs-index/) | Crawling and indexing confused for one control | Yes |
+| [`patterns/redirect-maps/`](patterns/redirect-maps/) | Chains, loops and moves served as temporary | No |
 
-## Every finding, listed and driven
+Plus two documents generated from the code, so they cannot disagree with it:
+[every finding, listed](docs/every-finding.md) and
+[what the checkers cannot see](docs/what-the-checkers-cannot-see.md). And one
+written by hand, because it is about what to do rather than about this code:
+the [Search Console playbook](docs/search-console-playbook.md).
 
-The ten patterns demonstrate ten faults. The checkers behind them can report 62,
-and all 62 are listed in [every finding](docs/every-finding.md), which is
-generated from `tools/catalogue.mjs` and regenerated in CI so it cannot go stale.
+## One entry per reason, not one per check
 
-The catalogue exists because of what happened when one was written. The ten
-pattern pairs drove 43 of the 62 checks. The other 19 had never been observed to
-fire, which is a different thing from working, and pointing a test at them found
-six real defects. They are listed below.
+There are 92 catalogued findings across ten checkers, and that number is larger
+than the number of rules in the code on purpose.
 
-`test/catalogue.test.mjs` now drives every catalogued finding out of a real call
-into a real checker and asserts set equality in both directions: nothing in the
-catalogue is unreachable, and nothing a checker emits is missing from the
-catalogue. A check cannot be added without being documented, and a documented
-check cannot rot into one that never fires.
+A canonical that is absent, a canonical whose href is empty, and a canonical
+that is relative are three different faults with three different causes and
+three different fixes. While they shared one weak "canonical problem" entry,
+the empty one was reported as clean, for the whole life of this repository, and
+an unrendered template variable in a canonical is the single most common
+canonical fault on a templated site.
 
-## What the test suite found
+Splitting the weak findings is where almost every fault in this code has been
+found. The current pass split the sitemap checker's per-URL rules from its
+index rules and discovered that a sitemap index was being checked for nothing
+at all.
 
-Six defects, every one of them in code that had already shipped, and every one
-confirmed by writing a test that reproduced it rather than by reading the source.
-
-**A check that passed every site it existed to catch.** The robots pattern reports
-an asset the crawler needs in order to render the page being disallowed. Page
-entries were converted from a URL to a path before being matched against
-robots.txt; asset entries were not. An asset list is normally copied out of a
-browser network panel, so it arrives as absolute URLs, and a full URL matches no
-robots.txt path at all. The check reported nothing for the input it would
-actually be given.
-
-**A date check that validated the spelling of a date and not the date.** The
-sitemap `lastmod` rule tested a shape, so `2026-02-30` and `2026-13-01` both
-passed as valid W3C datetimes. The fault the pattern is about is a `lastmod`
-Google cannot parse and silently ignores, so the checker missed the real case
-while appearing to cover it.
-
-**A sitemap with the wrong root element reported clean.** A well-formed XML file
-that was neither a `urlset` nor a `sitemapindex` fell into a hole: the URL loop
-iterated an empty list and finished with nothing to say. A sitemap saved from the
-wrong template, or an HTML error page served at the sitemap URL, passed.
-
-**A check that could never fire.** There was a finding for a file that was both a
-sitemap index and a `urlset`. A document with two root elements is not well-formed
-XML and was caught by the guard above it, and no other input can produce both
-keys. It was unreachable in principle, and it is gone.
-
-**A false positive on correct markup.** The duplicate entity check built a
-signature from type plus name or `@id`, so two genuinely different anonymous nodes
-of the same type collapsed into one signature and were reported as one entity
-declared twice. A duplicate can only be asserted about nodes that carry an
-identity, which is what it does now. A false positive costs more than a missing
-check, because it is how a reader learns to ignore the output.
-
-**A correct Chinese cluster reported as broken.** The hreflang value pattern was
-language plus optional region, so it rejected `zh-Hant` and `zh-Hant-TW`, which
-are valid. The message was wrong too: it blamed a country code for every
-malformed value, including values that were nothing of the kind, which sends the
-reader to the wrong fix.
-
-## What the suite asserts that a pair runner cannot
-
-`npm run verify` asks whether each corrected example is clean and whether each
-failing example still fails. Both are necessary. Neither catches the two ways a
-pair can be worth nothing, so the test suite adds a third outcome and a
-cross-check.
-
-**A failing example whose only evidence is an absence.** A page with no h1 is a
-failing heading example, and so is a blank document. Six of the 62 findings report
-the absence of a thing rather than a fault in it, they are marked as such in the
-catalogue, and a failing example that produces only those has demonstrated that
-it is empty. `npm run verify` now rejects that too.
-
-**A corrected example carrying somebody else's fault.** Six of the checkers read
-HTML, and every corrected page here gets copied into a theme by somebody who read
-one README. So every `pass.html` is run through all six, not only its own.
-
-## Layout
-
-```
-patterns/canonical-tags/
-  README.md     what the rule is, how it fails in production, how to test
-  fail.html     the failing artefact, commented
-  pass.html     the corrected artefact, commented
-  meta.json     the rule ids the failing example must trigger, whether Search
-                Console reports the problem at all, and the manual check the
-                automated one cannot replace
-tools/
-  checkers.mjs      one checker per pattern kind
-  catalogue.mjs     every finding any checker can emit
-  verify.mjs        the pattern pair runner
-  check.mjs         the repository verifier
-  catalogue-doc.mjs generates docs/every-finding.md
-test/
-  cases.mjs         one artefact per finding
-  catalogue.test.mjs reachability and completeness, both directions
-  pairs.test.mjs    the ten pairs, plus the third outcome and the cross-check
-  <kind>.test.mjs   the checkers, with their controls
-```
-
-Artefacts are whatever the pattern is actually about: HTML for anything in the
-head, XML for sitemaps, and a JSON manifest where the rule spans more than one
-page. hreflang and robots use manifests deliberately, because the faults that
-matter in both are only visible when several pages are in view at once, and a
-checker that looked at one page would pass a completely broken site.
-
-Every hostname in every artefact is under the reserved `.example` top-level
-domain, and `npm run check` fails if one is not. Nothing here comes from a
-delivered site.
-
-## Verifying
-
-Node 20.18.1 or newer. That exact floor is `cheerio`'s, not a round number
-picked for tidiness: an earlier version of this package advertised `>=20.0.0`,
-which is a range its own dependency tree will not install on. CI installs on
-exactly 20.18.1 with `--engine-strict`, so the claim is tested rather than
-asserted, and runs the whole suite on 20, 22 and 24.
-
-```bash
-npm install
-npm test                  # 142 tests over the checkers, the catalogue and the pairs
-npm run verify            # the ten pattern pairs
-npm run check             # 1161 repository assertions
-npm run docs -- --check   # fails if the generated finding list is stale
-```
-
-```
-10 patterns checked, 6 of them invisible in Search Console, 0 failing.
-1161 repository assertions, all passing.
-```
-
-The repository verifier is the one worth explaining, because it checks the claims
-rather than the code. The numbers quoted in this README have to be the numbers the
-repository produces. Every pattern directory has to be complete and has to declare
-findings that exist. Every id `checkers.mjs` can emit has to be catalogued. The
-generated document has to match the catalogue. Every test file has to be named in
-the test script, because `node --test` did not accept glob patterns before Node 21
-and a globbed script runs nothing on an older runtime while appearing to pass.
-
-The test count is counted from the test sources, not parsed out of the runner's
-output. Node 20 and 22 print TAP when their output is piped and Node 24 prints the
-spec reporter regardless, so a verifier that reads the summary line passes on one
-and fails on the other for no reason at all.
+Each finding also declares the complete set of severities it can be emitted at,
+and the test suite compares that against what the code produces in both
+directions. The second direction is the one that does the work: a severity
+declared in the catalogue that no test has ever produced fails the build, which
+is what stops the severity column from becoming a description of what somebody
+once intended.
 
 ## Limits
 
-[What the checkers cannot see](docs/what-the-checkers-cannot-see.md) is the
-document to read before trusting a green run. The short version:
+Everything these checkers cannot see is written down, and more to the point it
+is asserted. There are 14 declared limits, each carrying two artefacts:
 
-Every finding here comes from reading one artefact. None of these checkers is a
-crawler, none of them fetches anything, and none of them sees the document a
-search engine actually receives, which is the document after the server, the CDN,
-the tag manager, the consent layer and the framework have each had a turn. A
-canonical that is right in the template and rewritten on hydration is a different
-canonical. A sitemap with no faults in it can list the wrong five thousand URLs.
-Correctness of form says nothing about correctness of content.
+- a **blind** artefact the limit applies to, where the checker must stay quiet
+  about the findings the limit names
+- a **contrast** artefact, nearly identical, where the same checker must speak
 
-That is why every `meta.json` carries a `manualCheck` as well as a rule, and why
-`npm run check` fails if one is missing. The checker is the part that can run on
-every commit. It is not the whole answer.
+The second half is the one people leave out, and without it a limit is
+indistinguishable from a checker that simply does not work. Silence is evidence
+of a blind spot only once the same code has been shown to fire.
 
-## Documents
+Two of the limits do not produce silence at all. The checker reports that an
+input it needed was absent and that one of its own rules was therefore not run,
+and that refusal is catalogued as a finding like any other. The distinction
+matters more than it sounds: a rule that quietly does nothing and a rule that
+reports it did nothing look identical from the outside, and only one of them is
+honest. Before the breadcrumb checker had that refusal, a page with no
+canonical and no `og:url` skipped two of its seven rules in silence and was
+reported clean.
 
-| Document | What it covers |
-|---|---|
-| [Every finding, listed](docs/every-finding.md) | All 62 findings, which checker emits each, and which of them Search Console says nothing about. Generated. |
-| [What the checkers cannot see](docs/what-the-checkers-cannot-see.md) | The limits, per checker, and the three that apply everywhere |
-| [Search Console issue playbook](docs/search-console-playbook.md) | What each status means, which ones are confirmations rather than faults, which two are judgements rather than bugs, and what Search Console will never tell you |
+Two more are worse than a blind spot: they manufacture a finding. There is no
+browser here, so a canonical set by JavaScript is reported as a canonical that
+does not exist, which is false of the page a crawler renders. That is written
+out in the limits document rather than left for somebody to discover.
 
-## Scope
+The full list is in [what the checkers cannot
+see](docs/what-the-checkers-cannot-see.md), generated from the manifest the
+tests assert.
 
-Crawling, indexing, canonicalisation, structured data, redirects, international
-targeting, and the measurement those decisions are judged by. Not content
-strategy, not keyword research, not link building.
+## Verifying
 
-The patterns are framework-free. They are plain HTML, XML and JSON so they can
-be lifted into a theme, a static site generator, a Next.js app or a page builder
-without translation. The tooling has two dependencies, `cheerio` and
-`fast-xml-parser`, and the reasoning for keeping them is in the limits document:
-hand-rolling an HTML parser is how a checker ends up confidently wrong about a
-document a browser reads correctly.
+```
+npm install
+npm test           # the unit suite
+npm run verify     # every pattern pair, as data
+npm run verdicts   # the same patterns through the real program, in both modes
+npm run check      # the repository itself
+npm run docs:check # the generated documents, which fail if they are stale
+npm run thin       # the entry points, which fail if a decision moved into one
+```
 
-## Related
+CI runs all seven on three exact Node versions, installs on the declared floor,
+and separately requires that the declared floor refuses an install when it is
+raised above the runtime. Installing at the floor passes whether or not
+`--engine-strict` does anything, so on its own it proves nothing.
 
-- [core-web-vitals-checklist](https://github.com/BuildWithAbdullah/core-web-vitals-checklist) - the performance half of the same audit
-- [site-audit-cli](https://github.com/BuildWithAbdullah/site-audit-cli) - runs the technical SEO checks against a live URL, alongside accessibility, performance and security
-- [wcag-fix-library](https://github.com/BuildWithAbdullah/wcag-fix-library) - heading structure again, framed as the accessibility requirement it also is
-- [wordpress-security-hardening](https://github.com/BuildWithAbdullah/wordpress-security-hardening) - including the bot protection rules that deindex sites by accident
+The suite is 219 tests. `npm run verify` checks eleven pattern pairs against
+their manifests with set equality in both directions, so a failing example
+cannot produce a finding nobody declared. `npm run verdicts` then runs the real
+verifier as a program, twice per pattern, once in each of its two output modes,
+and requires the two to agree on the findings and on the exit code.
+
+`npm run check` makes 47 repository assertions. That number is much smaller
+than the one this repository used to print, and it checks more. The previous
+verifier made one assertion per file for several of its rules, so its total was
+mostly a count of how many files the repository has: adding an unrelated
+document moved it. A claim is now a named thing that is true or false about the
+repository, and it stays one claim however many files it reads.
+`test/repo.test.mjs` perturbs a copy of the tree in four ways that used to move
+the old number, requires this one to stay still in all four, and requires the
+claims themselves to still fail on the two perturbations that are genuinely
+wrong. The consequence worth stating out loud: an assertion total from this
+repository is not comparable with one from a repository that still counts per
+file. Judge depth by the test count and the catalogue size.
+
+## What this is not
+
+It is not a crawler and it does not fetch anything. Every checker here is
+handed a file and reads it, which is a deliberate trade: it means these run in
+CI against artefacts you control, and it means a canonical pointing at a page
+that was deleted last year is spelled correctly and comes back clean.
+
+It is not a vocabulary validator either. The structured data checkers ask
+whether the graph is coherent, never whether a property exists on a type. The
+validator at schema.org answers that question and this does not.
+
+And none of it is client work. Every artefact in here is a pattern, written
+against hostnames reserved for documentation, generalised from the shape of a
+fault rather than copied from anybody's site.
 
 ## Licence
 
-MIT. Use them, ship them, no attribution required.
+MIT. No attribution required. Take the checkers, take the patterns, put them in
+your own pipeline.
