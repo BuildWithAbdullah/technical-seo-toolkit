@@ -1,131 +1,197 @@
 # What the checkers cannot see
 
-Read this before trusting a green run.
+Generated from `tools/limits.mjs` by `npm run docs`. Do not edit by hand:
+CI regenerates this file and fails if it differs from what is committed.
 
-Every finding in this repository is produced by reading one artefact that is
-small enough to reason about. None of these checkers is a crawler, none of them
-fetches anything, and none of them sees the page a search engine actually
-receives. That gap is where most real technical SEO faults live, so a clean run
-here means the artefact you handed over is correct, and nothing more than that.
+There are 14 declared limits.
 
-Three limits apply everywhere, and they matter more than any of the per-checker
-notes below.
+Every one of them is asserted rather than described, which is the only reason
+this document is worth reading. A sentence saying a checker cannot see
+something still reads correctly after the checker learns to see it, and a
+reader who trusts a caveat that is no longer true is worse off than one who had
+nothing. So each limit below carries two artefacts, and
+`test/limits.test.mjs` runs both:
 
-**The artefact is not the page.** Every HTML pattern here is checked as source.
-A search engine sees the document after the server, the CDN, the tag manager, the
-consent layer and the framework have all had a turn. A canonical that is right in
-the template and rewritten on hydration is a different canonical. A JSON-LD block
-that is valid in your editor and escaped by the CMS on the way out is a broken
-block. The only way to know what is being served is to fetch the URL and read the
-response, and nothing in this repository does that.
+- a **blind** artefact the limit applies to, where the checker must stay quiet
+  about the findings the limit names
+- a **contrast** artefact, nearly identical, where the same checker must speak
 
-**Nothing here is a judgement about whether a page should be indexed.** The
-checkers tell you that two controls contradict each other, that a trail does not
-match its URL, that a date cannot be parsed. Whether a given page belongs in the
-index at all is a decision about the site, and no check can make it for you.
+The second half is the one people leave out. Without it a limit is
+indistinguishable from a checker that simply does not work: silence is
+evidence of a blind spot only once the same code has been shown to fire.
 
-**A clean artefact can still be the wrong artefact.** A sitemap with no faults in
-it can list the wrong five thousand URLs. A reciprocal hreflang cluster can point
-at pages that nobody should land on. Correctness of form says nothing about
-correctness of content.
+## The 2 limits where the checker says so
 
-## Per checker
+Two of these do not produce silence. The checker reports that an input it
+needed was absent and that a rule it owns was therefore not run, and that
+refusal is catalogued as a finding like any other. The distinction matters: a
+rule that quietly does nothing and a rule that reports it did nothing look
+identical from the outside, and only one of them is honest.
 
-### canonical
+- **Two breadcrumb rules need the URL of the page and say so when they do not have it** reports `breadcrumb-page-url-unknown`.
+- **Whether a move is permanent is a question about the status, and a map need not record one** reports `redirect-status-missing`.
 
-Reads the document as source. It does not fetch the canonical target, so it
-cannot tell you whether that URL returns 200, redirects, is itself canonicalised
-elsewhere, or is blocked from crawling. It compares against `og:url` only, so a
-disagreement with a sitemap entry, an hreflang alternate or an internal link is
-invisible here. It treats a trailing slash difference as the same address, which
-is nearly always right and is occasionally wrong on a server that serves both.
+## The 2 limits that produce a finding that is wrong
 
-### hreflang
+These are the uncomfortable ones. The limit does not hide a fault, it invents
+one: the checker is confidently wrong about an artefact that is correct. They
+are listed out loud because a reader who hits one needs to recognise it, and
+the test suite holds the checker to being wrong in exactly the stated way.
 
-Reads a manifest, which means it is checking what you believe the cluster is
-rather than what the pages declare. Building that manifest by hand is how a
-cluster gets certified against its own documentation. It also cannot see hreflang
-delivered in HTTP headers or in a sitemap, which are both valid and both common
-on large sites, and it does not fetch any alternate, so a reciprocal cluster
-pointing at four 404s passes.
+- **The HTML is read as served, not as rendered** reports `canonical-missing`, which is false of the page as a crawler sees it.
+- **Only JSON-LD is read, so microdata and RDFa look like no structured data at all** reports `jsonld-none`, which is false of the page as a crawler sees it.
 
-### headings
+## Every limit
 
-The outline is read in document order from the source. A page that moves headings
-with CSS, or renders half of them after hydration, has an outline this checker
-never sees. The body-copy finding is openly a heuristic with a threshold at 160
-characters: a long heading is usually a paragraph that got its size from a tag,
-and sometimes it is a long heading. Nothing here judges whether the headings
-describe the page, which is the thing that actually matters and is not mechanical.
+### Nothing here fetches a URL
 
-### analytics
+Checker: `canonical`. Limit id: `no-network`.
 
-Finds measurement ids in the served source. It cannot see a tag injected by a tag
-manager at runtime, which is how most duplicate tags arrive, so the usual cause
-of the fault is the one case this checker misses. It also cannot tell you who
-owns a container: an id is an id, and whether you can log into the account behind
-it is something only a person can check. Every `meta.json` carries a
-`manualCheck` for exactly this reason.
+Every checker reads a file it was handed. None of them makes a request, so none can tell you whether the URL a canonical names returns 200, whether a redirect target exists, or whether a sitemap entry is reachable. A canonical pointing at a page that was deleted last year is spelled correctly and is reported clean.
 
-### jsonld-syntax
+Asserted silent on: `canonical-`.
 
-Reports that a block did not parse, was escaped, or rendered empty. It does not
-validate against Schema.org, so a block that parses cleanly and uses a property
-that does not exist, or omits one a rich result requires, passes. Eligibility for
-a rich result is Google's judgement and changes without notice; this checker only
-tells you the block survived the parser.
+Proved live by a contrast artefact that produces `canonical-non-https`.
 
-### jsonld-graph
+### The HTML is read as served, not as rendered
 
-Judges one document. The fault this pattern is really about, four templates
-describing four different organisations, is a property of a whole site and needs
-every page's graph collected before it can be seen. On one page, an entity
-referenced from elsewhere and not defined here looks like a dangling reference
-even when the site is coherent. It also only treats top-level and `@graph` nodes
-as definitions, so an `@id` declared on a nested object does not count as defined.
+Checker: `canonical`. Limit id: `no-rendering`.
 
-### jsonld-breadcrumb
+There is no browser here. A canonical, a heading or a JSON-LD block that JavaScript adds after load is invisible to these checkers, and one that JavaScript removes is still counted. This limit does not only hide faults, it manufactures them: the blind artefact below sets its canonical from a script, and the checker reports the page as having no canonical at all, which is false of the page a crawler renders.
 
-Compares the trail against the page's own declared URL and the depth of its path.
-A site whose URL structure deliberately does not mirror its navigation will trip
-the depth finding while being entirely correct, which is why that one is a
-finding and not an error. It cannot compare the trail against the breadcrumbs a
-visitor sees, because those are rendered, and a trail that disagrees with the
-visible navigation is the version Google stops trusting.
+Asserted on the finding it produces rather than on silence.
 
-### sitemap
+Reports wrongly: `canonical-missing`. The artefact is correct and the checker says otherwise.
 
-Reads one file. It does not fetch a single URL in it, so it cannot tell you that
-half the entries redirect, that some are excluded by a `noindex`, or that others
-are canonicalised to somewhere else, and those are the faults that make a sitemap
-actively misleading. It validates `lastmod` as a date, which means both its shape
-and that the date exists, but it has no way to know whether the date is true, and
-a `lastmod` that updates on every deploy is worse than none at all.
+Proved live by a contrast artefact that the same checker reports completely clean.
 
-### robots
+### A robots.txt rule is matched against the path and not the query string
 
-Implements Google's documented precedence: longest matching rule wins and `Allow`
-wins a tie. It matches rule paths as prefixes and strips a trailing wildcard, so
-a rule with a wildcard in the middle of the path, or an end-of-string anchor, is
-matched more loosely than a real crawler would match it. Other crawlers do not
-all follow Google's precedence. And the manifest describes what you think the
-site serves: the only way to know a URL is fetchable is to ask the URL Inspection
-tool about that URL.
+Checker: `robots`. Limit id: `robots-query-string`.
 
-### redirects
+Google matches a Disallow against the path and the query string together, so Disallow: /*?sort= blocks a faceted URL. The matcher here is given a path only, because the asset and page lists in a manifest are normally pasted from a browser network panel and the query is dropped on the way in. A rule that does its work in the query string therefore looks like a rule that matches nothing.
 
-Reads the map, not the server. A clean map deployed onto a host that adds its own
-rules, a CDN with a redirect layer of its own, or a platform that forces a
-trailing slash, produces chains this file cannot predict. Checking the map is
-worth doing before a migration and proves nothing after one: the finding that
-matters on launch day comes from following every source URL with a real request
-and counting the hops.
+Asserted silent on: `robots-blocks-`.
 
-## The dependencies
+Proved live by a contrast artefact that produces `robots-blocks-render-assets`.
 
-Two: `cheerio` for HTML and `fast-xml-parser` for XML. Both are here deliberately.
-Hand-rolling an HTML parser is how a checker ends up confidently wrong about a
-document a browser reads correctly, and a checker that is confidently wrong is
-worse than no checker. The consequence is that the HTML these patterns are judged
-against is the HTML `cheerio` builds, which is close to a browser and is not a
-browser.
+### Only the wildcard group and Googlebot groups are evaluated
+
+Checker: `robots`. Limit id: `robots-other-agents`.
+
+The precedence rules implemented here are the ones Google documents, so the only groups read are User-agent: * and any group naming Googlebot. A group aimed at another crawler is parsed and then ignored. If the fault you are chasing is that one crawler has been locked out, this will not find it.
+
+Asserted silent on: `robots-blocks-`.
+
+Proved live by a contrast artefact that produces `robots-blocks-render-assets`.
+
+### The fifty megabyte limit is not checked, only the fifty thousand URL limit
+
+Checker: `sitemap`. Limit id: `sitemap-byte-size`.
+
+The protocol caps a sitemap at 50,000 URLs and at 50MB uncompressed, and a file can break the second without approaching the first. The entry count is checked here and the byte size is not, because size is a property of the file as served and this checker is handed a string with no claim about its encoding or whether it was gzipped. No finding in the catalogue mentions size at all.
+
+Asserted silent on: `sitemap-too-many`, `sitemap-size`.
+
+Proved live by a contrast artefact that produces `sitemap-too-many-urls`.
+
+### Only JSON-LD is read, so microdata and RDFa look like no structured data at all
+
+Checker: `jsonld-syntax`. Limit id: `jsonld-only-json-ld`.
+
+The checkers find structured data by looking for script elements of type application/ld+json. Microdata written with itemscope and itemprop, and RDFa written with typeof and property, are both valid, both read by Google, and both invisible here. This is the second limit that manufactures a finding rather than hiding one: the blind artefact below carries a complete Organization in microdata and is reported as carrying no JSON-LD, which is true and reads as a page with no structured data.
+
+Asserted on the finding it produces rather than on silence.
+
+Reports wrongly: `jsonld-none`. The artefact is correct and the checker says otherwise.
+
+Proved live by a contrast artefact that the same checker reports completely clean.
+
+### The graph is checked for shape, never for vocabulary
+
+Checker: `jsonld-graph`. Limit id: `jsonld-vocabulary`.
+
+These checkers ask whether the graph is coherent: whether entities carry identities, whether references resolve, whether anything is restated. They never ask whether a property exists on a type, whether a value is the right datatype, or whether the properties a rich result requires are present. A node with a misspelled property name is structurally perfect and is reported clean. The validator at schema.org answers the vocabulary question and this does not.
+
+Asserted silent on: `jsonld-`.
+
+Proved live by a contrast artefact that produces `jsonld-entity-without-id`.
+
+### The cluster manifest says nothing about where the annotations are published
+
+Checker: `hreflang`. Limit id: `hreflang-transport`.
+
+Reciprocity can only be judged with every page of the cluster in view, which is why the input here is a manifest rather than a page. The cost is that the manifest does not record how each annotation reaches Google. A cluster that is perfectly reciprocal in this file and declared somewhere Google does not read it, such as a sitemap that was never submitted, is reported clean.
+
+Asserted silent on: `hreflang-`.
+
+Proved live by a contrast artefact that produces `hreflang-not-reciprocal`.
+
+### A redirect target outside the map is assumed to be the end of the chain
+
+Checker: `redirects`. Limit id: `redirect-target-existence`.
+
+Chains and loops are found by following targets back into the map. A target that is not a source in the map is treated as a final destination, because there is nothing else to treat it as. If that URL 404s, or redirects again at a layer the map does not describe, such as a CDN rule or a trailing slash normaliser, the chain is longer than this says and may not terminate at all.
+
+Asserted silent on: `redirect-`.
+
+Proved live by a contrast artefact that produces `redirect-chain`.
+
+### The outline is read from the source order and counts headings nobody sees
+
+Checker: `headings`. Limit id: `heading-visibility`.
+
+Headings are collected in document order and judged on their text, their label and their image alt text. Whether a heading is visible is a question about CSS, and there is no CSS engine here. The blind artefact below has an h1 that is hidden, so neither a reader nor a rendered crawl finds anything stating what the page is, and this checker reports the h1 as present.
+
+Asserted silent on: `heading-no-h1`.
+
+Proved live by a contrast artefact that produces `heading-no-h1`.
+
+### A canonical is judged against the page it sits on and nothing else
+
+Checker: `canonical`. Limit id: `canonical-one-page-at-a-time`.
+
+A canonical chain, where A names B and B names C, is the most common serious canonical fault and it cannot be seen from one document. Nor can a canonical pointing at a page that is noindex, which asks Google to consolidate signals onto a page that is asking to be dropped. Both need the target page, and this checker is handed one file.
+
+Asserted silent on: `canonical-`.
+
+Proved live by a contrast artefact that produces `canonical-multiple`.
+
+### What a tag container fires is not in the page
+
+Checker: `analytics`. Limit id: `analytics-container-contents`.
+
+A tag container is one script element in the markup and a list of tags on Google servers. A container that fires two GA4 properties and a container that fires nothing at all are byte identical in the page. Every analytics finding here is about what the markup declares, so a page whose double counting happens inside the container is reported clean.
+
+Asserted silent on: `analytics-multiple`, `analytics-duplicate`.
+
+Proved live by a contrast artefact that produces `analytics-multiple-ga4-properties`.
+
+### Two breadcrumb rules need the URL of the page and say so when they do not have it
+
+Checker: `jsonld-breadcrumb`. Limit id: `breadcrumb-page-url`.
+
+Whether the trail ends on the page it is on, and whether its length matches the depth of the URL, are both questions about the page URL. The page states it in og:url or in its canonical. When it states neither, those two rules cannot run, and the checker emits breadcrumb-page-url-unknown rather than passing in silence. That refusal is the limit holding: before it existed, a page with no canonical skipped both rules and was reported clean.
+
+Asserted silent on: `breadcrumb-last-item-not-this-page`, `breadcrumb-depth-mismatch`.
+
+Reports instead: `breadcrumb-page-url-unknown`, a note. The refusal is the limit holding.
+
+Proved live by a contrast artefact that produces `breadcrumb-depth-mismatch`.
+
+### Whether a move is permanent is a question about the status, and a map need not record one
+
+Checker: `redirects`. Limit id: `redirect-status`.
+
+A redirect map exported from a server configuration or a spreadsheet often carries only the two URLs. Without a status there is no answer to whether the move is permanent, so the checker emits redirect-status-missing instead of guessing. It used to guess: a rule with no status was reported as a temporary redirect, with the word undefined where the status code belonged, which is a verdict delivered on no evidence.
+
+Asserted silent on: `redirect-temporary-for-permanent-move`.
+
+Reports instead: `redirect-status-missing`, a warning. The refusal is the limit holding.
+
+Proved live by a contrast artefact that produces `redirect-temporary-for-permanent-move`.
+
+## What this document is not
+
+It is not the list of findings. That is [every finding, listed](every-finding.md),
+generated from the catalogue in the same way.
