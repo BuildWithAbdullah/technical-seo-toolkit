@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The corrected index.
+
+  Every child is named by an absolute https URL on the same host, listed once,
+  and carries a lastmod in W3C datetime form. That last field is the one that
+  does work: it is how Google decides whether fetching a child again is worth
+  anything, so an index that keeps it current is an index that gets your new
+  pages looked at sooner.
+-->
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <sitemap>
+    <loc>https://shop.example.com/sitemaps/products-1.xml</loc>
+    <lastmod>2026-01-15</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://shop.example.com/sitemaps/products-2.xml</loc>
+    <lastmod>2026-01-15</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://shop.example.com/sitemaps/pages.xml</loc>
+    <lastmod>2025-11-02</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://shop.example.com/sitemaps/categories.xml</loc>
+    <lastmod>2025-12-20</lastmod>
+  </sitemap>
+
+  <sitemap>
+    <loc>https://shop.example.com/sitemaps/blog.xml</loc>
+    <lastmod>2026-01-14T09:30:00+00:00</lastmod>
+  </sitemap>
+
+</sitemapindex>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  A sitemap index as it is usually broken.
+
+  Every fault here is in the index rather than in a child file, and each one
+  costs a whole file of URLs rather than one URL. The index parses, so the
+  Sitemaps report shows it as read.
+-->
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- Relative. A whole child sitemap with no address Google can resolve. -->
+  <sitemap>
+    <loc>/sitemaps/products-1.xml</loc>
+    <lastmod>2026-01-15</lastmod>
+  </sitemap>
+
+  <!-- http, so every child fetch costs a redirect before it starts. -->
+  <sitemap>
+    <loc>http://shop.example.com/sitemaps/products-2.xml</loc>
+    <lastmod>2026-01-15</lastmod>
+  </sitemap>
+
+  <!-- Listed twice, which is what a generator that appends rather than
+       rewrites produces after a deploy. -->
+  <sitemap>
+    <loc>https://shop.example.com/sitemaps/pages.xml</loc>
+    <lastmod>2026-01-15</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://shop.example.com/sitemaps/pages.xml</loc>
+    <lastmod>2026-01-15</lastmod>
+  </sitemap>
+
+  <!-- No lastmod at all. On an index entry this is the signal that decides
+       whether the child is refetched, so leaving it out asks for every child
+       to be refetched on Google's own schedule rather than on yours. -->
+  <sitemap>
+    <loc>https://shop.example.com/sitemaps/categories.xml</loc>
+  </sitemap>
+
+  <!-- A date a person can read and a parser cannot. It is ignored in silence,
+       and the entry then behaves exactly like the one above. -->
+  <sitemap>
+    <loc>https://shop.example.com/sitemaps/blog.xml</loc>
+    <lastmod>15 January 2026</lastmod>
+  </sitemap>
+
+</sitemapindex>

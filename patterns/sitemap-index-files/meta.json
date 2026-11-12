@@ -1,0 +1,15 @@
+{
+  "slug": "sitemap-index-files",
+  "name": "A sitemap index whose children can actually be fetched",
+  "kind": "sitemap",
+  "expect": [
+    "sitemap-index-loc-relative",
+    "sitemap-index-loc-non-https",
+    "sitemap-index-duplicate-loc",
+    "sitemap-index-lastmod-missing",
+    "sitemap-index-lastmod-invalid"
+  ],
+  "gscReports": true,
+  "gscNote": "The Sitemaps report lists the index and the children it managed to read, with a count beside each. A child it never reached is simply not in the list, and nothing says a child was expected, so the report looks complete while a whole section of the site is unsubmitted.",
+  "manualCheck": "Fetch the index, take every loc out of it, and fetch each one. Count the URLs that come back and compare the total against the number of pages you believe the site has. The faults in this file are invisible precisely because the index itself parses."
+}
